@@ -10,7 +10,7 @@ import pickle
 
 drawer = Drawer()
 poseProcessor = PoseProcessor()
-input_source = "test_videos/video3.mp4"
+input_source = "test_videos/video2.mp4"
 filename = os.path.basename(input_source).split('.')[0]
 
 POSE_PAIRS = [['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'RElbow'], ['LShoulder', 'LElbow'],
@@ -23,29 +23,24 @@ inHeight = 368
 threshold = 0.1
 
 cap = cv2.VideoCapture(input_source)
-ready_date_filename = 'test_videos/video3_MPI'
+
+ready_date_filename = 'test_videos/video2_MPI'
 ready_data = open(ready_date_filename, 'rb')
-hasFrame, frame = cap.read()
 
-frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-file_size = os.stat(ready_date_filename).st_size
+cap_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+cap_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-frame_size = int(file_size / frame_count)
-
-if not hasFrame:
-    raise Exception("Video isn't found")
 vid_writer = cv2.VideoWriter(f'test_videos_output/{filename}_out.avi', cv2.VideoWriter_fourcc(*"MJPG"), 15,
-                             (frame.shape[1], frame.shape[0]))
+                             (cap_width, cap_height))
 
 while cv2.waitKey(1) < 0:
     t = time.time()
     hasFrame, frame = cap.read()
 
-    frame_matrix = pickle.load(ready_data)
-
     if not hasFrame:
-        cv2.waitKey()
         break
+
+    frame_matrix = pickle.load(ready_data)
 
     frameWidth = frame.shape[1]
     frameHeight = frame.shape[0]
@@ -69,7 +64,6 @@ while cv2.waitKey(1) < 0:
             points[joint] = None
 
     poseProcessor.define_state(points, frame)
-
     drawer.draw_skeleton(frame, points, POSE_PAIRS)
     cv2.putText(frame, "time taken = {:.2f} sec".format(time.time() - t), (10, 50), cv2.FONT_HERSHEY_COMPLEX, .8,
                 (255, 50, 0), 2, lineType=cv2.LINE_AA)

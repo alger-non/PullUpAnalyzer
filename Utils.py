@@ -34,6 +34,3 @@ def set_model(model_name: str):
     return (protoFile, weightsFile)
 
 
-def is_arm_points_valid(pointA, pointB, pointC):
-    unique_points = {pointA, pointB, pointC}
-    return pointA and pointB and pointC and len(unique_points) == 3
