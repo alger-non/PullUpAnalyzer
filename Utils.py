@@ -5,16 +5,16 @@ def get_vector_module(vector: list):
     return pow(pow(vector[0], 2) + pow(vector[1], 2), 0.5)
 
 
-def get_angle_between_vectors(vectorA: list, vectorB: list):
-    vectors_product = np.dot(vectorA, vectorB)
-    angle_cos = vectors_product / (get_vector_module(vectorA) * get_vector_module(vectorB))
+def get_angle_between_vectors(vector_a: list, vector_b: list):
+    vectors_product = np.dot(vector_a, vector_b)
+    angle_cos = vectors_product / (get_vector_module(vector_a) * get_vector_module(vector_b))
     angle_in_radians = math.acos(angle_cos)
     degrees = math.degrees(angle_in_radians)
     return int(degrees)
 
 
-def get_vector_from_points(pointA: list, pointB: list):
-    vector = [pointA[0] - pointB[0], pointA[1] - pointB[1]]
+def get_vector_from_points(point_a: list, point_b: list):
+    vector = [point_a[0] - point_b[0], point_a[1] - point_b[1]]
     return vector
 
 

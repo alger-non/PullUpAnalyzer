@@ -7,7 +7,7 @@ import pickle
 
 
 input_source = "test_videos/video2.mp4"
-model = "MPI"
+model = "COCO"
 
 filename = os.path.basename(input_source).split('.')[0]
 output_data = open(f'test_videos/{filename}_{model}', 'wb')
