@@ -9,9 +9,9 @@ class PoseProcessor:
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
         self.arm_angle_threshold = 30
         self.wrists_level_angle_threshold = 10
-        self.states = ['hanging int the bottom position', 'ascending', 'hanging in the top position', 'descending',
+        self.states = ['hanging in the bottom position', 'ascending', 'hanging in the top position', 'descending',
                        'undefined state']
-        self.cur_state = self.states[4]
+        self._cur_state = self.states[4]
         self.repeats = 0
 
         self.process_current_state = {self.states[0]: self.process_hanging_in_bottom_position,
@@ -29,22 +29,27 @@ class PoseProcessor:
     def get_right_arm_angle(self):
         return self._cur_right_arm_angle
 
+    def get_cur_state(self):
+        return self._cur_state
+
     wrists_level_angle = property(get_wrists_level_angle)
     left_arm_angle = property(get_left_arm_angle)
     right_arm_angle = property(get_right_arm_angle)
+    cur_state = property(get_cur_state)
 
-    def process_hanging_in_bottom_position(self, points, frame):
+
+    def process_hanging_in_bottom_position(self, points):
         pass
 
     def process_hanging_in_top_position(self):
         pass
 
-    def process_undefined_state(self, points, frame):
-        wrists_is_on_same_level = self.is_wrists_on_same_level(points, frame)
-        angle_in_arms_is_valid = self.is_arms_straight(points, frame)
+    def process_undefined_state(self, points):
+        wrists_is_on_same_level = self.is_wrists_on_same_level(points)
+        angle_in_arms_is_valid = self.is_arms_straight(points)
 
         if angle_in_arms_is_valid and wrists_is_on_same_level:
-            self.cur_state = self.states[0]
+            self._cur_state = self.states[0]
 
     def process_ascending(self):
         pass
@@ -69,15 +74,14 @@ class PoseProcessor:
             Utils.get_vector_from_points(points['RWrist'], points['RElbow']),
             Utils.get_vector_from_points(points['RElbow'], points['RShoulder']))
 
-    def is_arms_straight(self, points, frame):
-        angle_of_left_arm, angle_of_right_arm = math.inf, math.inf
+    def is_arms_straight(self, points):
         if self.is_arm_points_exist(points['LWrist'], points['LElbow'], points['LShoulder']):
             self._cur_left_arm_angle = self.get_angle_between_wrist_and_shoulder_in_left(points)
 
         if self.is_arm_points_exist(points['RWrist'], points['RElbow'], points['RShoulder']):
             self._cur_right_arm_angle = self.get_angle_between_wrist_and_shoulder_in_right(points)
 
-        return True if angle_of_left_arm < self.arm_angle_threshold and angle_of_right_arm < self.arm_angle_threshold else False
+        return True if self._cur_left_arm_angle < self.arm_angle_threshold and self._cur_left_arm_angle < self.arm_angle_threshold else False
 
     def is_wrists_on_same_level(self, points):
         if not (points['LWrist'] and points['RWrist']):
@@ -108,7 +112,6 @@ class PoseProcessor:
         else:
             return False
 
-    def define_state(self, points, frame):
-        self.process_current_state[self.cur_state](points, frame)
-        cv2.putText(frame, f'{self.cur_state}', (10, frame.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 4,
-                    lineType=cv2.LINE_AA)
+    def define_state(self, points):
+        self.process_current_state[self._cur_state](points)
+

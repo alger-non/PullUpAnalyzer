@@ -29,20 +29,19 @@ vid_writer = cv2.VideoWriter(f'test_videos_output/{filename}_out.avi', cv2.Video
                              (cap_width, cap_height))
 
 while cv2.waitKey(1) < 0:
-    t = time.time()
     hasFrame, frame = cap.read()
     if not hasFrame:
         break
 
     frame_matrix = pickle.load(ready_data)
     points = Utils.extract_body_joints_points(frame_matrix, (cap_width, cap_height), needed_points, threshold)
-    pose_processor.define_state(points, frame)
+    pose_processor.define_state(points)
     drawer.draw_numbered_joints(frame, points, needed_points)
     drawer.draw_skeleton(frame, points, POSE_PAIRS)
-    drawer.print_message(frame, f'left arm angle: {pose_processor.left_arm_angle}', 10, 90)
-    drawer.print_message(frame, f'right arm angle: {pose_processor.right_arm_angle}', 10, 130)
-    drawer.print_message(frame, f'wrists levels angle: {pose_processor.wrists_level_angle}', 10, 170)
-    drawer.print_message(frame, f'time taken = {time.time() - t}', 10, 50)
+    drawer.print_message(frame, f'left arm angle: {pose_processor.left_arm_angle}', 10, 50)
+    drawer.print_message(frame, f'right arm angle: {pose_processor.right_arm_angle}', 10, 90)
+    drawer.print_message(frame, f'wrists levels angle: {pose_processor.wrists_level_angle}', 10, 130)
+    drawer.print_message(frame, f'current state: {pose_processor.cur_state}', 10, frame.shape[0] - 20)
     cv2.imshow('Output-Skeleton', frame)
     vid_writer.write(frame)
 

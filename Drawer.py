@@ -21,6 +21,8 @@ class Drawer:
     @staticmethod
     def draw_numbered_joints(frame, points: dict, needed_points: dict):
         for joint, point in points.items():
+            if not point:
+                break
             joint_number = needed_points[joint]
             cv2.circle(frame, (point[0], point[1]), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
             cv2.putText(frame, f'{joint_number}', (point[0], point[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
