@@ -4,18 +4,21 @@ import numpy as np
 import sys
 import Utils
 import os
+
 from PoseProcessor import PoseProcessor
 from Drawer import Drawer
 
 
 drawer = Drawer()
-poseProcessor = PoseProcessor()
+poseProcessor = PoseProcessor(30, 5)
 input_source = "test_videos/video2.mp4"
 filename = os.path.basename(input_source).split('.')[0]
 protoFile, weightsFile = Utils.set_model('MPI')
 
 
 needed_points = {"Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5, "LElbow": 6, "LWrist": 7}
+POSE_PAIRS = (['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'RElbow'], ['LShoulder', 'LElbow'],
+              ['RElbow', 'RWrist'], ['LElbow', 'LWrist'], ['LWrist', 'RWrist'])
 
 inWidth = 368
 inHeight = 368
@@ -29,6 +32,7 @@ cap_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 vid_writer = cv2.VideoWriter(f'test_videos_output/{filename}_out.avi', cv2.VideoWriter_fourcc(*"MJPG"), 15,
                              (cap_width, cap_height))
 net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_OPENCL)
 
 while cv2.waitKey(1) < 0:
     t = time.time()
@@ -43,7 +47,7 @@ while cv2.waitKey(1) < 0:
     output = net.forward()
     points = Utils.extract_body_joints_points(output, (cap_width, cap_height), needed_points, threshold)
     drawer.draw_numbered_joints(frame, points, needed_points)
-    drawer.draw_skeleton(frame, points, Utils.POSE_PAIRS)
+    drawer.draw_skeleton(frame, points, POSE_PAIRS)
     drawer.print_message(frame, f'time taken = {time.time() - t:0.3} sec', 10, 50)
     cv2.imshow('Output-Skeleton', frame)
     vid_writer.write(frame)

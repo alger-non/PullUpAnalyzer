@@ -4,21 +4,22 @@ import math
 
 
 class PoseProcessor:
-    def __init__(self):
+    def __init__(self, arm_angle_threshold, failed_attempts_amount_threshold):
         self._cur_wrists_level_angle = None
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
-        self.arm_angle_threshold = 30
+        self.arm_angle_threshold = arm_angle_threshold
         self.wrists_level_angle_threshold = 10
         self.states = ['hanging in the bottom position', 'ascending', 'hanging in the top position', 'descending',
                        'undefined state']
         self._cur_state = self.states[4]
         self._repeats = 0
-
+        self._failed_state_detection_attempts = 0
         self.process_current_state = {self.states[0]: self.process_hanging_in_bottom_position,
                                       self.states[1]: self.process_ascending,
                                       self.states[2]: self.process_hanging_in_top_position,
                                       self.states[3]: self.process_descending,
                                       self.states[4]: self.process_undefined_state}
+        self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
 
     def get_wrists_level_angle(self):
         return self._cur_wrists_level_angle
@@ -41,6 +42,16 @@ class PoseProcessor:
     cur_state = property(get_cur_state)
     repeats = property(get_repeats)
 
+    def zero_failed_state_detection_attempts(self):
+        self._failed_state_detection_attempts = 0
+
+    def inc_failed_state_detection_attempts(self):
+        self._failed_state_detection_attempts += 1
+
+    def check_failed_state_detection_attempts_amount(self):
+        if self._failed_state_detection_attempts > self.failed_attempts_amount_threshold:
+            self._cur_state = self.states[4]
+
     def process_hanging_in_bottom_position(self, points):
         angle_in_arms_is_valid = self.is_arms_straight(points)
         if not angle_in_arms_is_valid:
@@ -57,11 +68,9 @@ class PoseProcessor:
             self._cur_state = self.states[0]
 
     def is_there_initial_position(self, points):
-        wrists_is_on_same_level = self.is_wrists_on_same_level(points)
         angle_in_arms_is_valid = self.is_arms_straight(points)
         wrists_is_over_body = self.is_wrists_over_body(points)
-        print(wrists_is_on_same_level, angle_in_arms_is_valid, wrists_is_over_body)
-        return True if angle_in_arms_is_valid and wrists_is_on_same_level and wrists_is_over_body else False
+        return True if angle_in_arms_is_valid and wrists_is_over_body else False
 
     def process_ascending(self, points):
         neck_is_over_wrists_level = self.is_neck_over_wrists_level(points)
@@ -73,6 +82,20 @@ class PoseProcessor:
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
             self._cur_state = self.states[0]
+
+    def is_there_hang(self, points):
+        wrists_is_on_same_level = self.is_wrists_on_same_level(points)
+        wrists_is_higher_than_elbows = self.is_wrists_higher_than_elbows(points)
+        return True if wrists_is_on_same_level and wrists_is_higher_than_elbows else False
+
+    @staticmethod
+    def is_wrists_higher_than_elbows(points):
+        if not all((points['LWrist'], points['RWrist'], points['LElbow'], points['RElbow'])):
+            return False
+
+        left_wrist_y, right_wrist_y = points['LWrist'][1], points['RWrist'][1]
+        left_elbow_y, right_elbow_y = points['LElbow'][1], points['RElbow'][1]
+        return True if left_wrist_y < left_elbow_y and right_wrist_y < right_elbow_y else False
 
     @staticmethod
     def is_arm_points_exist(point_a, point_b, point_c):
@@ -145,4 +168,11 @@ class PoseProcessor:
         return True if neck_point[1] <= lowest_wrist_y else False
 
     def define_state(self, points):
-        self.process_current_state[self._cur_state](points)
+        if self.is_there_hang(points):
+            self.zero_failed_state_detection_attempts()
+            self.process_current_state[self._cur_state](points)
+            return True
+        else:
+            self.inc_failed_state_detection_attempts()
+            self.check_failed_state_detection_attempts_amount()
+            return False

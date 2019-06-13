@@ -1,4 +1,5 @@
 import cv2
+import skcuda
 
 
 class Drawer:

@@ -7,13 +7,14 @@ from Drawer import Drawer
 import pickle
 from matplotlib import pyplot as plt
 
-from Utils import POSE_PAIRS
-
 drawer = Drawer()
-pose_processor = PoseProcessor()
+pose_processor = PoseProcessor(30, 5)
 input_source = "test_videos/video2.mp4"
 filename = os.path.basename(input_source).split('.')[0]
-needed_points = {"Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5, "LElbow": 6, "LWrist": 7}
+needed_points = {"Head": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5, "LElbow": 6,
+                 "LWrist": 7}
+POSE_PAIRS = (['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'RElbow'], ['LShoulder', 'LElbow'],
+              ['RElbow', 'RWrist'], ['LElbow', 'LWrist'], ['LWrist', 'RWrist'], ['Head', 'Neck'])
 
 inWidth = 368
 inHeight = 368
@@ -28,17 +29,15 @@ cap_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 vid_writer = cv2.VideoWriter(f'test_videos_output/{filename}_out.avi', cv2.VideoWriter_fourcc(*"MJPG"), 15,
                              (cap_width, cap_height))
-frame_num = 0
+
 while cv2.waitKey(1) < 0:
     hasFrame, frame = cap.read()
     if not hasFrame:
         break
-    frame_num += 1
-    drawer.print_message(frame, f'{frame_num}', 10, 200)
-    print(frame_num)
     frame_matrix = pickle.load(ready_data)
     points = Utils.extract_body_joints_points(frame_matrix, (cap_width, cap_height), needed_points, threshold)
-    pose_processor.define_state(points)
+    if not pose_processor.define_state(points):
+        drawer.print_message(frame, f'Failed state detection attempt', 10, 200)
     drawer.draw_numbered_joints(frame, points, needed_points)
     drawer.draw_skeleton(frame, points, POSE_PAIRS)
     drawer.print_message(frame, f'left arm angle: {pose_processor.left_arm_angle}', 10, 50)

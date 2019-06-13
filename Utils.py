@@ -2,9 +2,6 @@ import numpy as np
 import math
 import cv2
 
-POSE_PAIRS = (['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'RElbow'], ['LShoulder', 'LElbow'],
-              ['RElbow', 'RWrist'], ['LElbow', 'LWrist'], ['LWrist', 'RWrist'])
-
 
 def get_vector_module(vector: list):
     return pow(pow(vector[0], 2) + pow(vector[1], 2), 0.5)
