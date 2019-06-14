@@ -5,10 +5,9 @@ import os
 from PoseProcessor import PoseProcessor
 from Drawer import Drawer
 import pickle
-from matplotlib import pyplot as plt
 
 drawer = Drawer()
-pose_processor = PoseProcessor(30, 5)
+pose_processor = PoseProcessor(30, 5, 1 / 5)
 input_source = "test_videos/video2.mp4"
 filename = os.path.basename(input_source).split('.')[0]
 needed_points = {"Head": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5, "LElbow": 6,
@@ -38,6 +37,8 @@ while cv2.waitKey(1) < 0:
     points = Utils.extract_body_joints_points(frame_matrix, (cap_width, cap_height), needed_points, threshold)
     if not pose_processor.define_state(points):
         drawer.print_message(frame, f'Failed state detection attempt', 10, 200)
+    if pose_processor.chin_point:
+        drawer.draw_point(frame, pose_processor.chin_point, Drawer.BLUE_color, 8)
     drawer.draw_numbered_joints(frame, points, needed_points)
     drawer.draw_skeleton(frame, points, POSE_PAIRS)
     drawer.print_message(frame, f'left arm angle: {pose_processor.left_arm_angle}', 10, 50)
