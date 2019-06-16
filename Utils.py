@@ -20,20 +20,20 @@ def get_vector_from_points(point_a: list, point_b: list):
     return vector
 
 
-def set_model(model_name: str):
+def get_model_by_name(model_name: str):
     if model_name is "COCO":
-        protoFile = "pose/coco/pose_deploy_linevec.prototxt"
-        weightsFile = "pose/coco/pose_iter_440000.caffemodel"
+        proto_file = "pose/coco/pose_deploy_linevec.prototxt"
+        weights_file = "pose/coco/pose_iter_440000.caffemodel"
 
     elif model_name is "MPI":
-        protoFile = "pose/mpi/pose_deploy_linevec_faster_4_stages.prototxt"
-        weightsFile = "pose/mpi/pose_iter_160000.caffemodel"
+        proto_file = "pose/mpi/pose_deploy_linevec_faster_4_stages.prototxt"
+        weights_file = "pose/mpi/pose_iter_160000.caffemodel"
 
     elif model_name is "BODY_25":
-        protoFile = "pose/body_25/pose_deploy.prototxt"
-        weightsFile = "pose/body_25/pose_iter_584000.caffemodel"
+        proto_file = "pose/body_25/pose_deploy.prototxt"
+        weights_file = "pose/body_25/pose_iter_584000.caffemodel"
 
-    return (protoFile, weightsFile)
+    return proto_file, weights_file
 
 
 def extract_body_joints_points(matrix, frame_size: tuple, needed_points: dict, threshold):

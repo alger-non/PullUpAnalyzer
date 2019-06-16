@@ -11,7 +11,7 @@ model = "COCO"
 
 filename = os.path.basename(input_source).split('.')[0]
 output_data = open(f'test_videos/{filename}_{model}', 'wb')
-protoFile, weightsFile = Utils.set_model(model)
+protoFile, weightsFile = Utils.get_model_by_name(model)
 
 inWidth = 368
 inHeight = 368
