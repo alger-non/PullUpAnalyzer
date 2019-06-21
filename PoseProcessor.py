@@ -1,6 +1,8 @@
 import Utils
 import cv2
 import math
+import queue
+from collections import deque
 
 
 
@@ -9,7 +11,7 @@ class PoseProcessor:
         self._cur_wrists_level_angle = None
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
         self.arm_angle_threshold = arm_angle_threshold
-        self.wrists_level_angle_threshold = 10
+        self.wrists_level_angle_threshold = 5
         self.states = ['hanging in the bottom position', 'ascending', 'hanging in the top position', 'descending',
                        'undefined state']
         self._cur_state = self.states[4]
@@ -24,12 +26,13 @@ class PoseProcessor:
         self._chin_point = []
         self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
 
-        self.wrists_shift = 0
-        self.shoulders_shift = 0
-        self.prev_wrists_y = None
-        self.prev_shoulders_y = None
+        self.queue_history = 5
+        self.last_wrist_y_deviations = deque(maxlen=self.queue_history)
+        self.last_shoulder_y_deviations = deque(maxlen=self.queue_history)
         self.wrists_shoulders_distance_deviation_per_frame_threshold = 1 / 2
         self.deviation_per_frame_threshold = None
+        self.prev_shoulders_y = None
+        self.prev_wrists_y = None
 
     def get_wrists_level_angle(self):
         return self._cur_wrists_level_angle
@@ -83,10 +86,11 @@ class PoseProcessor:
             self._cur_state = self.states[0]
 
     def reset_shifts(self):
-        self.wrists_shift = 0
-        self.shoulders_shift = 0
+        self.last_shoulder_y_deviations.clear()
+        self.last_wrist_y_deviations.clear()
         self.prev_wrists_y = None
         self.prev_shoulders_y = None
+
 
     def define_wrists_shoulders_deviation_per_frame(self, points):
         distance_between_wrists_and_shoulders = self.find_distance_between_wrists_and_shoulders(points)
@@ -111,16 +115,21 @@ class PoseProcessor:
     def process_ascending(self, points):
         neck_is_over_wrists_level = self.is_neck_over_wrists_level(points)
 
-        self.calculate_wrists_shift(points)
-        self.calculate_shoulders_shift(points)
+        self.update_wrist_y_deviations(points)
+        self.update_shoulder_y_deviations(points)
 
-        print(self.wrists_shift, '  |  ', self.shoulders_shift)
-        if neck_is_over_wrists_level and self.shoulders_shift > self.wrists_shift:
-            self.inc_repeats_amount()
-            self._cur_state = self.states[2]
+        if neck_is_over_wrists_level:
+            wrists_deviations_sum = sum(self.last_wrist_y_deviations)
+            shoulders_deviations_sum = sum(self.last_shoulder_y_deviations)
+            #just debug, will be deleted
+            print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
+            if shoulders_deviations_sum > wrists_deviations_sum:
+                self.inc_repeats_amount()
+                self._cur_state = self.states[2]
 
-    def calculate_wrists_shift(self, points):
+    def update_wrist_y_deviations(self, points):
         cur_avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
+
         if not self.prev_wrists_y:
             self.prev_wrists_y = cur_avg_wrists_y
             return
@@ -128,12 +137,12 @@ class PoseProcessor:
         cur_wrists_y_deviation = abs(self.prev_wrists_y - cur_avg_wrists_y)
 
         if cur_wrists_y_deviation < self.deviation_per_frame_threshold:
-            self.wrists_shift += cur_wrists_y_deviation
+            self.last_wrist_y_deviations.append(cur_wrists_y_deviation)
             self.prev_wrists_y = cur_avg_wrists_y
         else:
             self.prev_wrists_y = None
 
-    def calculate_shoulders_shift(self, points):
+    def update_shoulder_y_deviations(self, points):
         cur_avg_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
         if not self.prev_shoulders_y:
             self.prev_shoulders_y = cur_avg_shoulders_y
@@ -142,7 +151,7 @@ class PoseProcessor:
         cur_shoulders_y_deviation = abs(self.prev_shoulders_y - cur_avg_shoulders_y)
 
         if cur_shoulders_y_deviation < self.deviation_per_frame_threshold:
-            self.shoulders_shift += cur_shoulders_y_deviation
+            self.last_shoulder_y_deviations.append(cur_shoulders_y_deviation)
             self.prev_shoulders_y = cur_avg_shoulders_y
         else:
             self.prev_shoulders_y = None
