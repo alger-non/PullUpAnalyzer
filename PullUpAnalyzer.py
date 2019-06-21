@@ -5,9 +5,9 @@ import os
 from PoseProcessor import PoseProcessor
 from VideoProcessor import VideoProcessor
 
-pose_processor = PoseProcessor(30, 5, 1 / 2)
-input_source = "/home/algernon/samba/video_queue/input/girl/girl.mp4"
-json_dir = '/home/algernon/samba/video_queue/input/girl/girl_json'
+pose_processor = PoseProcessor(30, 30, 5, 1 / 2)
+input_source = '/home/algernon/samba/video_queue/input/Sandel/Sandel.mp4'
+json_dir = '/home/algernon/samba/video_queue/input/Sandel/Sandel_json'
 output_dir = '/home/algernon/samba/video_queue/output/'
 
 cap = cv2.VideoCapture(input_source)
@@ -19,9 +19,10 @@ output_video = os.path.join(output_dir, f'{filename}_out.avi')
 video_writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"XVID"), 24,
                                (cap_width, cap_height))
 required_points = {"Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5, "LElbow": 6,
-                 "LWrist": 7}
+                 "LWrist": 7, "MidHip": 8, "RHip": 9, "RKnee": 10, "RAnkle": 11, "LHip": 12, "LKnee": 13, "LAnkle": 14}
 required_pairs = (['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'RElbow'], ['LShoulder', 'LElbow'],
-                  ['RElbow', 'RWrist'], ['LElbow', 'LWrist'], ['LWrist', 'RWrist'], ['Nose', 'Neck'])
+                  ['RElbow', 'RWrist'], ['LElbow', 'LWrist'], ['LWrist', 'RWrist'], ['Nose', 'Neck'], ['Neck', 'MidHip'],
+                  ['MidHip', 'LHip'], ['MidHip', 'RHip'], ['RHip', 'RKnee'], ['LHip', 'LKnee'], ['LKnee', 'LAnkle'], ['RKnee', 'RAnkle'])
 
 video_processor = VideoProcessor(pose_processor, required_points, required_pairs)
 video_processor.enable_debug()

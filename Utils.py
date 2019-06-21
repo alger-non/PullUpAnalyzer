@@ -50,5 +50,9 @@ def extract_required_points(points_list, needed_points: dict):
     points = {}
     for joint, joint_number in needed_points.items():
         position = 3 * joint_number
-        points[joint] = (int(points_list[position]), int(points_list[position+1]))
+        x, y = (int(points_list[position]), int(points_list[position+1]))
+        if (x, y) == (0, 0):
+            points[joint] = None
+        else:
+            points[joint] = (x, y)
     return points

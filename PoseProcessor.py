@@ -5,12 +5,14 @@ import queue
 from collections import deque
 
 
-
 class PoseProcessor:
-    def __init__(self, arm_angle_threshold, failed_attempts_amount_threshold, neck_chin_top_of_head_ratio):
+    def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
+                 neck_chin_top_of_head_ratio):
         self._cur_wrists_level_angle = None
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
+        self._cur_angle_between_legs = None
         self.arm_angle_threshold = arm_angle_threshold
+        self.leg_angle_threshold = leg_angle_threshold
         self.wrists_level_angle_threshold = 5
         self.states = ['hanging in the bottom position', 'ascending', 'hanging in the top position', 'descending',
                        'undefined state']
@@ -26,7 +28,7 @@ class PoseProcessor:
         self._chin_point = []
         self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
 
-        self.queue_history = 5
+        self.queue_history = 3
         self.last_wrist_y_deviations = deque(maxlen=self.queue_history)
         self.last_shoulder_y_deviations = deque(maxlen=self.queue_history)
         self.wrists_shoulders_distance_deviation_per_frame_threshold = 1 / 2
@@ -70,7 +72,7 @@ class PoseProcessor:
             self._cur_state = self.states[4]
 
     def process_hanging_in_bottom_position(self, points):
-        angle_in_arms_is_valid = self.is_arms_straight(points)
+        angle_in_arms_is_valid = self.are_arms_straight(points)
         if not angle_in_arms_is_valid:
             self._cur_state = self.states[1]
 
@@ -82,7 +84,6 @@ class PoseProcessor:
     def process_undefined_state(self, points):
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
-
             self._cur_state = self.states[0]
 
     def reset_shifts(self):
@@ -90,7 +91,6 @@ class PoseProcessor:
         self.last_wrist_y_deviations.clear()
         self.prev_wrists_y = None
         self.prev_shoulders_y = None
-
 
     def define_wrists_shoulders_deviation_per_frame(self, points):
         distance_between_wrists_and_shoulders = self.find_distance_between_wrists_and_shoulders(points)
@@ -105,9 +105,19 @@ class PoseProcessor:
         self.define_wrists_shoulders_deviation_per_frame(points)
         self.reset_shifts()
 
-        angle_in_arms_is_valid = self.is_arms_straight(points)
-        wrists_is_over_body = self.is_wrists_over_body(points)
-        return True if angle_in_arms_is_valid and wrists_is_over_body else False
+        angle_in_arms_is_valid = self.are_arms_straight(points)
+        wrists_are_over_body = self.is_wrists_over_body(points)
+        legs_are_together = self.are_legs_together(points)
+        return True if angle_in_arms_is_valid and wrists_are_over_body and legs_are_together else False
+
+    def are_legs_together(self, points):
+        self._cur_angle_between_legs = math.inf
+        if self.are_points_existing(points['RAnkle'], points['MidHip'], points['LAnkle']):
+            self._cur_angle_between_legs = 180 - self.get_angle_between_three_points(points['LAnkle'], points['MidHip'],
+                                                                                     points['RAnkle'])
+
+        print('legs - ', self._cur_angle_between_legs)
+        return True if self._cur_angle_between_legs < self.leg_angle_threshold else False
 
     def inc_repeats_amount(self):
         self._repeats += 1
@@ -121,7 +131,7 @@ class PoseProcessor:
         if neck_is_over_wrists_level:
             wrists_deviations_sum = sum(self.last_wrist_y_deviations)
             shoulders_deviations_sum = sum(self.last_shoulder_y_deviations)
-            #just debug, will be deleted
+            # just debug, will be deleted
             print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
             if shoulders_deviations_sum > wrists_deviations_sum:
                 self.inc_repeats_amount()
@@ -156,7 +166,6 @@ class PoseProcessor:
         else:
             self.prev_shoulders_y = None
 
-
     def process_descending(self, points):
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
@@ -164,11 +173,11 @@ class PoseProcessor:
 
     def is_there_hang(self, points):
         wrists_is_on_same_level = self.is_wrists_on_same_level(points)
-        wrists_is_higher_than_elbows = self.is_wrists_higher_than_elbows(points)
+        wrists_is_higher_than_elbows = self.are_wrists_higher_than_elbows(points)
         return True if wrists_is_on_same_level and wrists_is_higher_than_elbows else False
 
     @staticmethod
-    def is_wrists_higher_than_elbows(points):
+    def are_wrists_higher_than_elbows(points):
         if not all((points['LWrist'], points['RWrist'], points['LElbow'], points['RElbow'])):
             return False
 
@@ -177,21 +186,15 @@ class PoseProcessor:
         return True if left_wrist_y < left_elbow_y and right_wrist_y < right_elbow_y else False
 
     @staticmethod
-    def is_arm_points_exist(point_a, point_b, point_c):
+    def are_points_existing(point_a, point_b, point_c):
         unique_points = {point_a, point_b, point_c}
         return point_a and point_b and point_c and len(unique_points) == 3
 
     @staticmethod
-    def get_angle_between_wrist_and_shoulder_in_left(points: list):
+    def get_angle_between_three_points(point_a, point_b, point_c):
         return Utils.get_angle_between_vectors(
-            Utils.get_vector_from_points(points['LWrist'], points['LElbow']),
-            Utils.get_vector_from_points(points['LElbow'], points['LShoulder']))
-
-    @staticmethod
-    def get_angle_between_wrist_and_shoulder_in_right(points: list):
-        return Utils.get_angle_between_vectors(
-            Utils.get_vector_from_points(points['RWrist'], points['RElbow']),
-            Utils.get_vector_from_points(points['RElbow'], points['RShoulder']))
+            Utils.get_vector_from_points(point_a, point_b),
+            Utils.get_vector_from_points(point_b, point_c))
 
     @staticmethod
     def is_wrists_over_body(points):
@@ -210,15 +213,17 @@ class PoseProcessor:
         lowest_y = min(ys)
         return True if left_wrist_y < lowest_y and right_wrist_y < lowest_y else False
 
-    def is_arms_straight(self, points):
+    def are_arms_straight(self, points):
         self._cur_left_arm_angle, self._cur_right_arm_angle = math.inf, math.inf
-        if self.is_arm_points_exist(points['LWrist'], points['LElbow'], points['LShoulder']):
-            self._cur_left_arm_angle = self.get_angle_between_wrist_and_shoulder_in_left(points)
+        if self.are_points_existing(points['LWrist'], points['LElbow'], points['LShoulder']):
+            self._cur_left_arm_angle = self.get_angle_between_three_points(points['LWrist'], points['LElbow'],
+                                                                           points['LShoulder'])
 
-        if self.is_arm_points_exist(points['RWrist'], points['RElbow'], points['RShoulder']):
-            self._cur_right_arm_angle = self.get_angle_between_wrist_and_shoulder_in_right(points)
+        if self.are_points_existing(points['RWrist'], points['RElbow'], points['RShoulder']):
+            self._cur_right_arm_angle = self.get_angle_between_three_points(points['RWrist'], points['RElbow'],
+                                                                            points['RShoulder'])
 
-        return True if self._cur_left_arm_angle < self.arm_angle_threshold and self._cur_right_arm_angle < self.arm_angle_threshold else False
+        return True if self._cur_left_arm_angle < self.leg_angle_threshold and self._cur_right_arm_angle < self.leg_angle_threshold else False
 
     def is_wrists_on_same_level(self, points):
         if not (points['LWrist'] and points['RWrist']):
@@ -258,11 +263,11 @@ class PoseProcessor:
 
     def define_chin(self, points):
         # define chin point by simple ratio between head and neck
-        head_point, neck_point = points['Nose'], points['Neck']
-        if not (head_point and neck_point):
+        nose_point, neck_point = points['Nose'], points['Neck']
+        if not (nose_point and neck_point):
             self._chin_point = None
             return
 
-        chin_point_x = neck_point[0] + int((head_point[0] - neck_point[0]) * self.neck_chin_nose_ratio)
-        chin_point_y = neck_point[1] + int((head_point[1] - neck_point[1]) * self.neck_chin_nose_ratio)
+        chin_point_x = neck_point[0] + int((nose_point[0] - neck_point[0]) * self.neck_chin_nose_ratio)
+        chin_point_y = neck_point[1] + int((nose_point[1] - neck_point[1]) * self.neck_chin_nose_ratio)
         self._chin_point = [chin_point_x, chin_point_y]

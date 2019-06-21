@@ -29,7 +29,6 @@ for input_video in input_videos:
     params = dict()
     params['number_people_max'] = 1
     params['cli_verbose'] = 100
-    params['part_to_show'] = 1
     # next two params disable video displaying
     # params['render_pose'] = 0
     # params['display'] = 0
