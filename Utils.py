@@ -1,6 +1,8 @@
 import numpy as np
 import math
 import cv2
+from PoseProcessor import body25_parts
+
 
 
 def get_vector_module(vector: list):
@@ -36,16 +38,9 @@ def get_model_by_name(model_name: str):
     return proto_file, weights_file
 
 
-def extract_body_joints_points(matrix, frame_size: tuple, needed_points: dict, threshold):
-    matrix_height = matrix.shape[2]
-    matrix_width = matrix.shape[3]
+def extract_required_points(points_list, needed_points: dict):
     points = {}
-
     for joint, joint_number in needed_points.items():
-        prob_map = matrix[0, joint_number, :, :]
-        _, prob, _, point = cv2.minMaxLoc(prob_map)
-        x = (frame_size[0] * point[0]) / matrix_width
-        y = (frame_size[1] * point[1]) / matrix_height
-
-        points[joint] = (int(x), int(y)) if prob > threshold else None
+        position = 3 * joint_number
+        points[joint] = (int(points_list[position]), int(points_list[position+1]))
     return points

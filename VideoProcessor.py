@@ -3,9 +3,11 @@ import sys
 import Utils
 import os
 from PoseProcessor import PoseProcessor
+import json
 from Drawer import Drawer
 import pickle
 import time
+from os import walk
 
 
 class VideoProcessor:
@@ -38,8 +40,8 @@ class VideoProcessor:
             net.setInput(inp_blob)
             frame_matrix = net.forward()
             print(frame_matrix)
-            points = Utils.extract_body_joints_points(frame_matrix, (input_video_width, input_video_height),
-                                                      self._required_points, self.threshold)
+            points = Utils.extract_required_points(frame_matrix, (input_video_width, input_video_height),
+                                                   self._required_points, self.threshold)
             print(points)
             if self._debug:
                 # probably add some options for displaying _debug information
@@ -48,20 +50,53 @@ class VideoProcessor:
                 Drawer.print_message(frame, f'time taken = {time.time() - t:0.3} sec', 10, 300)
             yield frame
 
-    def process_video_with_raw_data(self, cap, raw_data):
-        input_video_width, input_video_height = VideoProcessor.get_video_size(cap)
-        while True:
-            has_frame, frame = cap.read()
-            if not has_frame:
-                return None
 
-            frame_matrix = pickle.load(raw_data)
-            points = Utils.extract_body_joints_points(frame_matrix, (input_video_width, input_video_height),
-                                                      self._required_points, self.threshold)
-            if self._debug:
-                # probably add some options for displaying _debug information
-                self.display_debug_info(frame, points)
-            yield frame
+
+
+
+
+    def process_video_with_raw_data(self, cap, json_dir):
+        filenames = []
+        for _, _, f_names in walk(json_dir):
+            filenames.extend(f_names)
+            break
+        filenames = sorted(filenames)
+        for filename in filenames:
+
+
+            full_filename_path = os.path.join(json_dir, filename)
+            with open(full_filename_path, "r") as json_data:
+                data = json.load(json_data)
+
+                has_frame, frame = cap.read()
+                if not has_frame:
+                    return None
+
+                if data['people']:
+                    points_list = data['people'][0]['pose_keypoints_2d']
+                    points = Utils.extract_required_points(points_list, self._required_points)
+
+                    if self._debug:
+                        # probably add some options for displaying _debug information
+                        self.display_debug_info(frame, points)
+                yield frame
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @staticmethod
     def get_video_size(cap):
@@ -73,7 +108,7 @@ class VideoProcessor:
         if not self._pose_processor.define_state(points):
             Drawer.print_message(frame, f'Failed state detection attempt', 10, 200)
         if self._pose_processor.chin_point:
-            Drawer.draw_point(frame, self._pose_processor.chin_point, Drawer.BLUE_color, 8)
+            Drawer.draw_point(frame, self._pose_processor.chin_point, Drawer.BLUE_COLOR, 8)
         Drawer.draw_skeleton(frame, points, self._required_pairs)
         Drawer.print_message(frame, f'left arm angle: {self._pose_processor.left_arm_angle}', 10, 50)
         Drawer.print_message(frame, f'right arm angle: {self._pose_processor.right_arm_angle}', 10, 90)

@@ -31,9 +31,8 @@ for input_video in input_videos:
     # next two params disable displaying video
     params['render_pose'] = 0
     params['display'] = 0
-    params['write_coco_json'] = os.path.join(output_video_dir, f'{input_video.split(".")[0]}_json')
+    params['write_json'] = os.path.join(output_video_dir, f'{input_video.split(".")[0]}_json')
     params['video'] = full_input_video_name
-    params['net_resolution'] = '-1x368'
     params["model_folder"] = models_dir
 
     try:
