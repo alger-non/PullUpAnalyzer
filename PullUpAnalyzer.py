@@ -3,13 +3,11 @@ import sys
 import Utils
 import os
 from PoseProcessor import PoseProcessor
-from Drawer import Drawer
-import pickle
 from VideoProcessor import VideoProcessor
 
 pose_processor = PoseProcessor(30, 5, 1 / 2)
-input_source = "/home/algernon/samba/video_queue/input/dotsenko/dotsenko.mp4"
-json_dir = '/home/algernon/samba/video_queue/input/dotsenko/dotsenko_json'
+input_source = "/home/algernon/samba/video_queue/input/girl/girl.mp4"
+json_dir = '/home/algernon/samba/video_queue/input/girl/girl_json'
 output_dir = '/home/algernon/samba/video_queue/output/'
 
 cap = cv2.VideoCapture(input_source)

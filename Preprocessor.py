@@ -9,8 +9,8 @@ except ImportError as e:
         'Error: OpenPose library could not be found. Did you enable `BUILD_PYTHON` in CMake and have this Python script in the right folder?')
     raise e
 
-queue_dir = '/home/algernon/samba/video_queue/queue_dir'
-input_dir = '/home/algernon/samba/video_queue/input_dir'
+queue_dir = '/home/algernon/samba/video_queue/queue'
+input_dir = '/home/algernon/samba/video_queue/input'
 models_dir = 'models'
 
 input_videos = []
@@ -28,9 +28,11 @@ for input_video in input_videos:
 
     params = dict()
     params['number_people_max'] = 1
-    # next two params disable displaying video
-    params['render_pose'] = 0
-    params['display'] = 0
+    params['cli_verbose'] = 100
+    params['part_to_show'] = 1
+    # next two params disable video displaying
+    # params['render_pose'] = 0
+    # params['display'] = 0
     params['write_json'] = os.path.join(output_video_dir, f'{input_video.split(".")[0]}_json')
     params['video'] = full_input_video_name
     params["model_folder"] = models_dir

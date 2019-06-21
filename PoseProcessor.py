@@ -2,32 +2,7 @@ import Utils
 import cv2
 import math
 
-body25_parts = {"Nose": 0,
-              "Neck": 1,
-              "RShoulder": 2,
-              "RElbow": 3,
-              "RWrist": 4,
-              "LShoulder": 5,
-              "LElbow": 6,
-              "LWrist": 7,
-              "MidHip": 8,
-              "RHip": 9,
-              "RKnee": 10,
-              "RAnkle": 11,
-              "LHip": 12,
-              "LKnee": 13,
-              "LAnkle": 14,
-              "REye": 15,
-              "LEye": 16,
-              "REar": 17,
-              "LEar": 18,
-              "LBigToe": 19,
-              "LSmallToe": 20,
-              "LHeel": 21,
-              "RBigToe": 22,
-              "RSmallToe": 23,
-              "RHeel": 24,
-              "Background": 25}
+
 
 class PoseProcessor:
     def __init__(self, arm_angle_threshold, failed_attempts_amount_threshold, neck_chin_top_of_head_ratio):
@@ -47,7 +22,14 @@ class PoseProcessor:
                                       self.states[4]: self.process_undefined_state}
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
         self._chin_point = []
-        self.neck_chin_top_of_head_ratio = neck_chin_top_of_head_ratio
+        self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
+
+        self.wrists_shift = 0
+        self.shoulders_shift = 0
+        self.prev_wrists_y = None
+        self.prev_shoulders_y = None
+        self.wrists_shoulders_distance_deviation_per_frame_threshold = 1 / 2
+        self.deviation_per_frame_threshold = None
 
     def get_wrists_level_angle(self):
         return self._cur_wrists_level_angle
@@ -97,9 +79,28 @@ class PoseProcessor:
     def process_undefined_state(self, points):
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
+
             self._cur_state = self.states[0]
 
+    def reset_shifts(self):
+        self.wrists_shift = 0
+        self.shoulders_shift = 0
+        self.prev_wrists_y = None
+        self.prev_shoulders_y = None
+
+    def define_wrists_shoulders_deviation_per_frame(self, points):
+        distance_between_wrists_and_shoulders = self.find_distance_between_wrists_and_shoulders(points)
+        self.deviation_per_frame_threshold = distance_between_wrists_and_shoulders * self.wrists_shoulders_distance_deviation_per_frame_threshold
+
+    def find_distance_between_wrists_and_shoulders(self, points):
+        avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
+        avg_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
+        return abs(avg_wrists_y - avg_shoulders_y)
+
     def is_there_initial_position(self, points):
+        self.define_wrists_shoulders_deviation_per_frame(points)
+        self.reset_shifts()
+
         angle_in_arms_is_valid = self.is_arms_straight(points)
         wrists_is_over_body = self.is_wrists_over_body(points)
         return True if angle_in_arms_is_valid and wrists_is_over_body else False
@@ -109,9 +110,43 @@ class PoseProcessor:
 
     def process_ascending(self, points):
         neck_is_over_wrists_level = self.is_neck_over_wrists_level(points)
-        if neck_is_over_wrists_level:
+
+        self.calculate_wrists_shift(points)
+        self.calculate_shoulders_shift(points)
+
+        print(self.wrists_shift, '  |  ', self.shoulders_shift)
+        if neck_is_over_wrists_level and self.shoulders_shift > self.wrists_shift:
             self.inc_repeats_amount()
             self._cur_state = self.states[2]
+
+    def calculate_wrists_shift(self, points):
+        cur_avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
+        if not self.prev_wrists_y:
+            self.prev_wrists_y = cur_avg_wrists_y
+            return
+
+        cur_wrists_y_deviation = abs(self.prev_wrists_y - cur_avg_wrists_y)
+
+        if cur_wrists_y_deviation < self.deviation_per_frame_threshold:
+            self.wrists_shift += cur_wrists_y_deviation
+            self.prev_wrists_y = cur_avg_wrists_y
+        else:
+            self.prev_wrists_y = None
+
+    def calculate_shoulders_shift(self, points):
+        cur_avg_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
+        if not self.prev_shoulders_y:
+            self.prev_shoulders_y = cur_avg_shoulders_y
+            return
+
+        cur_shoulders_y_deviation = abs(self.prev_shoulders_y - cur_avg_shoulders_y)
+
+        if cur_shoulders_y_deviation < self.deviation_per_frame_threshold:
+            self.shoulders_shift += cur_shoulders_y_deviation
+            self.prev_shoulders_y = cur_avg_shoulders_y
+        else:
+            self.prev_shoulders_y = None
+
 
     def process_descending(self, points):
         there_is_initial_position = self.is_there_initial_position(points)
@@ -219,6 +254,6 @@ class PoseProcessor:
             self._chin_point = None
             return
 
-        chin_point_x = neck_point[0] + int((head_point[0] - neck_point[0]) * self.neck_chin_top_of_head_ratio)
-        chin_point_y = neck_point[1] + int((head_point[1] - neck_point[1]) * self.neck_chin_top_of_head_ratio)
+        chin_point_x = neck_point[0] + int((head_point[0] - neck_point[0]) * self.neck_chin_nose_ratio)
+        chin_point_y = neck_point[1] + int((head_point[1] - neck_point[1]) * self.neck_chin_nose_ratio)
         self._chin_point = [chin_point_x, chin_point_y]

@@ -26,33 +26,7 @@ class VideoProcessor:
         self._debug = False
 
     def process_video_with_net(self, cap, net, in_size=None):
-        input_video_width, input_video_height = self.get_video_size(cap)
-        if not in_size:
-            in_size = (int(self._default_in_size / input_video_height * input_video_width), self._default_in_size)
-        while True:
-            t = time.time()
-            has_frame, frame = cap.read()
-            if not has_frame:
-                break
-
-            inp_blob = cv2.dnn.blobFromImage(frame, 1.0 / 255, in_size,
-                                             (0, 0, 0), swapRB=False, crop=False)
-            net.setInput(inp_blob)
-            frame_matrix = net.forward()
-            print(frame_matrix)
-            points = Utils.extract_required_points(frame_matrix, (input_video_width, input_video_height),
-                                                   self._required_points, self.threshold)
-            print(points)
-            if self._debug:
-                # probably add some options for displaying _debug information
-                self.display_debug_info(frame, points)
-                # will be removed in the future
-                Drawer.print_message(frame, f'time taken = {time.time() - t:0.3} sec', 10, 300)
-            yield frame
-
-
-
-
+        raise NotImplementedError('This method not implented yet')
 
 
     def process_video_with_raw_data(self, cap, json_dir):
