@@ -31,7 +31,7 @@ class PoseProcessor:
                                       self.states[4]: self.process_undefined_state}
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
         self._chin_point = []
-        self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
+        self.neck_chin_ears_ratio = neck_chin_top_of_head_ratio
         self._boundary_distance_between_chin_and_wrist_to_start_attempt = None
         self._boundary_distance_between_chin_and_wrist_to_finish_attempt = None
         self.chin_to_wrists_raise_ratio_to_start_attempt = chin_to_wrists_raise_ratio_to_start_attempt
@@ -245,13 +245,14 @@ class PoseProcessor:
         head_is_between_arms = self.is_head_between_arms(points)
         return True if wrists_is_on_same_level and wrists_is_higher_than_elbows and head_is_between_arms else False
 
-    def is_head_between_arms(self, points):
-        if not (points['LWrist'] and points['RWrist'] and points['Nose']):
+    @staticmethod
+    def is_head_between_arms(points):
+        if not (points['LWrist'] and points['RWrist'] and points['Neck']):
             return False
 
         min_x_of_wrist = min(points['LWrist'][0], points['RWrist'][0])
         max_x_of_wrist = max(points['LWrist'][0], points['RWrist'][0])
-        return True if min_x_of_wrist < points['Nose'][0] < max_x_of_wrist else False
+        return True if min_x_of_wrist < points['Neck'][0] < max_x_of_wrist else False
 
     @staticmethod
     def are_wrists_higher_than_elbows(points):
@@ -338,12 +339,15 @@ class PoseProcessor:
             return False
 
     def define_chin(self, points):
-        # define chin point by simple ratio between head and neck
-        nose_point, neck_point = points['Nose'], points['Neck']
-        if not (nose_point and neck_point):
+        # define chin point by simple ratio between ears(x) and ears-neck(y)
+        l_ear_point, r_ear_point, neck_point, nose_point = points['LEar'], points['REar'], points['Neck'], points['Nose']
+        if not ((l_ear_point and r_ear_point or nose_point) and neck_point):
             self._chin_point = None
             return
 
-        chin_point_x = neck_point[0] + int((nose_point[0] - neck_point[0]) * self.neck_chin_nose_ratio)
-        chin_point_y = neck_point[1] + int((nose_point[1] - neck_point[1]) * self.neck_chin_nose_ratio)
+        if not nose_point:
+            nose_point = (l_ear_point[0] + r_ear_point[0]) / 2, (l_ear_point[1] + r_ear_point[1]) / 2
+
+        chin_point_x = neck_point[0] + int((nose_point[0] - neck_point[0]) * self.neck_chin_ears_ratio)
+        chin_point_y = neck_point[1] + int((nose_point[1] - neck_point[1]) * self.neck_chin_ears_ratio)
         self._chin_point = [chin_point_x, chin_point_y]

@@ -24,9 +24,6 @@ class Drawer:
                 Drawer.draw_point(frame, points[part_a], circle_color, radius)
                 Drawer.draw_point(frame, points[part_b], circle_color, radius)
 
-            Drawer.draw_point(frame, [844, 337], Drawer.GREEN_COLOR, radius)
-            Drawer.draw_point(frame, (899, 382), Drawer.GREEN_COLOR, radius)
-            Drawer.draw_point(frame, (899, 382), Drawer.GREEN_COLOR, radius)
 
     @staticmethod
     def draw_numbered_joints(frame, points: dict, needed_points: dict, circle_color=YELLOW_COLOR, text_color=RED_COLOR,
