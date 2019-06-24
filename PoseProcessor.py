@@ -111,13 +111,13 @@ class PoseProcessor:
         return True if angle_in_arms_is_valid and wrists_are_over_body and legs_are_together else False
 
     def are_legs_together(self, points):
-        self._cur_angle_between_legs = math.inf
-        if self.are_points_existing(points['RAnkle'], points['MidHip'], points['LAnkle']):
-            self._cur_angle_between_legs = 180 - self.get_angle_between_three_points(points['LAnkle'], points['MidHip'],
-                                                                                     points['RAnkle'])
+        points_are_existing = self.are_points_existing(points['RKnee'], points['MidHip'], points['LKnee'])
+        if points_are_existing:
+            self._cur_angle_between_legs = 180 - self.get_angle_between_three_points(points['LKnee'], points['MidHip'],
+                                                                                     points['RKnee'])
 
         print('legs - ', self._cur_angle_between_legs)
-        return True if self._cur_angle_between_legs < self.leg_angle_threshold else False
+        return False if points_are_existing and self._cur_angle_between_legs > self.leg_angle_threshold else True
 
     def inc_repeats_amount(self):
         self._repeats += 1
