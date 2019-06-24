@@ -4,12 +4,15 @@ import math
 import queue
 from collections import deque
 
+from Drawer import Drawer
+
 
 class PoseProcessor:
     def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
                  neck_chin_top_of_head_ratio):
         self._cur_wrists_level_angle = None
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
+        self._cur_left_leg_angle, self._cur_right_leg_angle = None, None
         self._cur_angle_between_legs = None
         self.arm_angle_threshold = arm_angle_threshold
         self.leg_angle_threshold = leg_angle_threshold
@@ -36,6 +39,8 @@ class PoseProcessor:
         self.prev_shoulders_y = None
         self.prev_wrists_y = None
 
+
+
     def get_wrists_level_angle(self):
         return self._cur_wrists_level_angle
 
@@ -44,6 +49,12 @@ class PoseProcessor:
 
     def get_right_arm_angle(self):
         return self._cur_right_arm_angle
+
+    def get_left_leg_angle(self):
+        return self._cur_left_leg_angle
+
+    def get_right_leg_angle(self):
+        return self._cur_right_leg_angle
 
     def get_cur_state(self):
         return self._cur_state
@@ -57,6 +68,8 @@ class PoseProcessor:
     wrists_level_angle = property(get_wrists_level_angle)
     left_arm_angle = property(get_left_arm_angle)
     right_arm_angle = property(get_right_arm_angle)
+    left_leg_angle = property(get_left_leg_angle)
+    right_leg_angle = property(get_right_leg_angle)
     cur_state = property(get_cur_state)
     repeats = property(get_repeats)
     chin_point = property(get_chin_point)
@@ -107,17 +120,25 @@ class PoseProcessor:
 
         angle_in_arms_is_valid = self.are_arms_straight(points)
         wrists_are_over_body = self.is_wrists_over_body(points)
-        legs_are_together = self.are_legs_together(points)
-        return True if angle_in_arms_is_valid and wrists_are_over_body and legs_are_together else False
+        legs_are_straight = self.are_legs_straight(points)
+        return True if angle_in_arms_is_valid and wrists_are_over_body and legs_are_straight else False
 
-    def are_legs_together(self, points):
-        points_are_existing = self.are_points_existing(points['RKnee'], points['MidHip'], points['LKnee'])
-        if points_are_existing:
-            self._cur_angle_between_legs = 180 - self.get_angle_between_three_points(points['LKnee'], points['MidHip'],
-                                                                                     points['RKnee'])
+    def are_legs_straight(self, points):
+        # legs are straight if:
+        # they are not found or
+        # angle in one of them less than leg_angle_threshold and second isn't found or
+        # angles in both of them is less than leg_angle_threshold
+        self._cur_left_leg_angle, self._cur_right_leg_angle = -math.inf, -math.inf
+        if self.are_points_existing(points['LHip'], points['LKnee'], points['LAnkle']):
+            self._cur_left_leg_angle = self.get_angle_between_three_points(points['LHip'], points['LKnee'],
+                                                                                     points['LAnkle'])
 
-        print('legs - ', self._cur_angle_between_legs)
-        return False if points_are_existing and self._cur_angle_between_legs > self.leg_angle_threshold else True
+        if self.are_points_existing(points['RHip'], points['RKnee'], points['RAnkle']):
+            self._cur_right_leg_angle = self.get_angle_between_three_points(points['RHip'], points['RKnee'],
+                                                                           points['RAnkle'])
+
+        return True if self._cur_left_leg_angle < self.leg_angle_threshold and self._cur_right_leg_angle < self.leg_angle_threshold else False
+
 
     def inc_repeats_amount(self):
         self._repeats += 1
@@ -132,7 +153,7 @@ class PoseProcessor:
             wrists_deviations_sum = sum(self.last_wrist_y_deviations)
             shoulders_deviations_sum = sum(self.last_shoulder_y_deviations)
             # just debug, will be deleted
-            print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
+            #print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
             if shoulders_deviations_sum > wrists_deviations_sum:
                 self.inc_repeats_amount()
                 self._cur_state = self.states[2]
@@ -187,8 +208,7 @@ class PoseProcessor:
 
     @staticmethod
     def are_points_existing(point_a, point_b, point_c):
-        unique_points = {point_a, point_b, point_c}
-        return point_a and point_b and point_c and len(unique_points) == 3
+        return point_a and point_b and point_c
 
     @staticmethod
     def get_angle_between_three_points(point_a, point_b, point_c):
@@ -223,7 +243,7 @@ class PoseProcessor:
             self._cur_right_arm_angle = self.get_angle_between_three_points(points['RWrist'], points['RElbow'],
                                                                             points['RShoulder'])
 
-        return True if self._cur_left_arm_angle < self.leg_angle_threshold and self._cur_right_arm_angle < self.leg_angle_threshold else False
+        return True if self._cur_left_arm_angle < self.arm_angle_threshold and self._cur_right_arm_angle < self.arm_angle_threshold else False
 
     def is_wrists_on_same_level(self, points):
         if not (points['LWrist'] and points['RWrist']):

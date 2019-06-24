@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import cv2
 
 body25_parts = {"Nose": 0,
               "Neck": 1,

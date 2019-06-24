@@ -69,6 +69,8 @@ class VideoProcessor:
         Drawer.print_message(frame, f'wrists levels angle: {self._pose_processor.wrists_level_angle}', 10, 130)
         Drawer.print_message(frame, f'repeats: {self._pose_processor.repeats}', 10, 170)
         Drawer.print_message(frame, f'current state: {self._pose_processor.cur_state}', 10, frame.shape[0] - 20)
+        Drawer.print_message(frame, f'left leg angle:  {self._pose_processor.left_leg_angle}', 10, 240)
+        Drawer.print_message(frame, f'right leg angle:  {self._pose_processor.right_leg_angle}', 10, 280)
 
     def get_threshold(self):
         return self._threshold

@@ -24,7 +24,7 @@ input_source, json_dir = extract_data_from_dir(args.input_dir)
 output_dir = args.output_dir
 
 
-pose_processor = PoseProcessor(30, 30, 5, 1 / 2)
+pose_processor = PoseProcessor(30, 10, 5, 1 / 2)
 
 
 cap = cv2.VideoCapture(input_source)
