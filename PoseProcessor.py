@@ -323,8 +323,8 @@ class PoseProcessor:
             return False
 
         left_wrist_point, right_wrist_point = points['LWrist'], points['RWrist']
-        lowest_wrist_y = max(left_wrist_point[1], right_wrist_point[1])
-        return True if self.chin_point[1] < lowest_wrist_y else False
+        avg_wrists_y = (left_wrist_point[1] + right_wrist_point[1]) / 2
+        return True if self.chin_point[1] < avg_wrists_y else False
 
     def define_state(self, points):
         self.define_chin(points)
