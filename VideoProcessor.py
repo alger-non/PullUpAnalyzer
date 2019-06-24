@@ -1,12 +1,8 @@
 import cv2
-import sys
 import Utils
 import os
-from PoseProcessor import PoseProcessor
 import json
 from Drawer import Drawer
-import pickle
-import time
 from os import walk
 
 
@@ -26,7 +22,7 @@ class VideoProcessor:
         self._debug = False
 
     def process_video_with_net(self, cap, net, in_size=None):
-        raise NotImplementedError('This method not implented yet')
+        raise NotImplementedError('This method not implemented yet')
 
 
     def process_video_with_raw_data(self, cap, json_dir):
@@ -49,27 +45,11 @@ class VideoProcessor:
                 if data['people']:
                     points_list = data['people'][0]['pose_keypoints_2d']
                     points = Utils.extract_required_points(points_list, self._required_points)
-
+                    is_state_defined = self._pose_processor.define_state(points)
                     if self._debug:
                         # probably add some options for displaying _debug information
-                        self.display_debug_info(frame, points)
+                        self.display_debug_info(frame, points, is_state_defined)
                 yield frame
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     @staticmethod
@@ -78,8 +58,8 @@ class VideoProcessor:
         input_video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         return input_video_width, input_video_height
 
-    def display_debug_info(self, frame, points):
-        if not self._pose_processor.define_state(points):
+    def display_debug_info(self, frame, points, is_state_defined):
+        if not is_state_defined:
             Drawer.print_message(frame, f'Failed state detection attempt', 10, 200)
         if self._pose_processor.chin_point:
             Drawer.draw_point(frame, self._pose_processor.chin_point, Drawer.BLUE_COLOR, 8)
@@ -90,12 +70,6 @@ class VideoProcessor:
         Drawer.print_message(frame, f'repeats: {self._pose_processor.repeats}', 10, 170)
         Drawer.print_message(frame, f'current state: {self._pose_processor.cur_state}', 10, frame.shape[0] - 20)
 
-    def get_in_size(self):
-        return self._in_size
-
-    def set_in_size(self, in_width, in_height):
-        self._in_size = (in_width, in_height)
-
     def get_threshold(self):
         return self._threshold
 
@@ -103,5 +77,4 @@ class VideoProcessor:
         # have to add some constraint logic on threshold
         self._threshold = threshold
 
-    in_size = property(get_in_size, set_in_size)
     threshold = property(get_threshold, set_threshold)

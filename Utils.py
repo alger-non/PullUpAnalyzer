@@ -39,7 +39,6 @@ def get_angle_between_vectors(vector_a: list, vector_b: list):
     angle_cos = vectors_product / (get_vector_module(vector_a) * get_vector_module(vector_b))
     #set cos-value range
     angle_cos = np.clip(angle_cos, -1, 1)
-    print(angle_cos)
     angle_in_radians = math.acos(angle_cos)
     degrees = math.degrees(angle_in_radians)
     return int(degrees)

@@ -47,6 +47,7 @@ required_pairs = (['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'R
 video_processor = VideoProcessor(pose_processor, required_points, required_pairs)
 video_processor.enable_debug()
 
+
 for processed_frame in video_processor.process_video_with_raw_data(cap, json_dir):
     cv2.imshow('Processed frame', processed_frame)
     video_writer.write(processed_frame)
