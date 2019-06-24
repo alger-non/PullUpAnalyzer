@@ -96,7 +96,7 @@ class PoseProcessor:
             self._cur_state = self.states[1]
 
     def process_hanging_in_top_position(self, points):
-        neck_is_over_wrists_level = self.is_neck_over_wrists_level(points)
+        neck_is_over_wrists_level = self.is_chin_over_wrists_level(points)
         if not neck_is_over_wrists_level:
             self._cur_state = self.states[3]
 
@@ -123,10 +123,14 @@ class PoseProcessor:
 
     def find_distance_between_wrists_and_chin(self, points):
         avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
-        return self.chin_point[1] - avg_wrists_y
+        return None if not self.chin_point else self.chin_point[1] - avg_wrists_y
+
 
     def define_initial_distance_between_wrists_and_chin(self, points):
-        self._boundary_distance_between_chin_and_wrist = self.find_distance_between_wrists_and_chin(points) * (1 - self.chin_to_wrists_raise_ratio_to_fix_attempt)
+        distance_between_wrists_and_chin = self.find_distance_between_wrists_and_chin(points)
+        if not distance_between_wrists_and_chin:
+            return
+        self._boundary_distance_between_chin_and_wrist = distance_between_wrists_and_chin * (1 - self.chin_to_wrists_raise_ratio_to_fix_attempt)
 
     def is_there_initial_position(self, points):
         self.define_wrists_shoulders_deviation_per_frame(points)
@@ -167,13 +171,13 @@ class PoseProcessor:
         self._pull_up_attempt_flag = False
 
     def process_ascending(self, points):
-        neck_is_over_wrists_level = self.is_neck_over_wrists_level(points)
+        chin_is_over_wrists_level = self.is_chin_over_wrists_level(points)
 
         self.update_wrist_y_deviations(points)
         self.update_shoulder_y_deviations(points)
         self.check_impure_pull_up(points)
 
-        if neck_is_over_wrists_level:
+        if chin_is_over_wrists_level:
             wrists_deviations_sum = sum(self.last_wrist_y_deviations)
             shoulders_deviations_sum = sum(self.last_shoulder_y_deviations)
             # just debug, will be deleted
@@ -183,9 +187,11 @@ class PoseProcessor:
                 self._cur_state = self.states[2]
 
     def check_impure_pull_up(self, points):
+        if not self.chin_point:
+            return
         cur_distance_between_chin_and_wrists = self.find_distance_between_wrists_and_chin(points)
 
-        print(cur_distance_between_chin_and_wrists, self._boundary_distance_between_chin_and_wrist)
+        #print(cur_distance_between_chin_and_wrists, self._boundary_distance_between_chin_and_wrist)
         if not self._pull_up_attempt_flag:
             self._pull_up_attempt_flag = True if cur_distance_between_chin_and_wrists <= self._boundary_distance_between_chin_and_wrist else False
         else:
@@ -298,7 +304,7 @@ class PoseProcessor:
 
         return True if self._cur_wrists_level_angle <= self.wrists_level_angle_threshold else False
 
-    def is_neck_over_wrists_level(self, points):
+    def is_chin_over_wrists_level(self, points):
         if not (points['LWrist'] and points['RWrist'] and self._chin_point):
             return False
 
