@@ -60,14 +60,15 @@ class VideoProcessor:
 
     def display_debug_info(self, frame, points, is_state_defined):
         if not is_state_defined:
-            Drawer.print_message(frame, f'Failed state detection attempt', 10, 200)
+            Drawer.print_message(frame, f'Failed state detection attempt', 10, 320)
         if self._pose_processor.chin_point:
             Drawer.draw_point(frame, self._pose_processor.chin_point, Drawer.BLUE_COLOR, 8)
         Drawer.draw_skeleton(frame, points, self._required_pairs)
         Drawer.print_message(frame, f'left arm angle: {self._pose_processor.left_arm_angle}', 10, 50)
         Drawer.print_message(frame, f'right arm angle: {self._pose_processor.right_arm_angle}', 10, 90)
         Drawer.print_message(frame, f'wrists levels angle: {self._pose_processor.wrists_level_angle}', 10, 130)
-        Drawer.print_message(frame, f'repeats: {self._pose_processor.repeats}', 10, 170)
+        Drawer.print_message(frame, f'pure repeats: {self._pose_processor.pure_repeats}', 10, 170)
+        Drawer.print_message(frame, f'impure repeats: {self._pose_processor.impure_repeats}', 10, 210)
         Drawer.print_message(frame, f'current state: {self._pose_processor.cur_state}', 10, frame.shape[0] - 20)
         Drawer.print_message(frame, f'left leg angle:  {self._pose_processor.left_leg_angle}', 10, 240)
         Drawer.print_message(frame, f'right leg angle:  {self._pose_processor.right_leg_angle}', 10, 280)

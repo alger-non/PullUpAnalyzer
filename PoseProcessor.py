@@ -9,7 +9,7 @@ from Drawer import Drawer
 
 class PoseProcessor:
     def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
-                 neck_chin_top_of_head_ratio):
+                 neck_chin_top_of_head_ratio, chin_to_wrists_raise_ratio_to_fix_attempt=0.7):
         self._cur_wrists_level_angle = None
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
         self._cur_left_leg_angle, self._cur_right_leg_angle = None, None
@@ -20,7 +20,8 @@ class PoseProcessor:
         self.states = ['hanging in the bottom position', 'ascending', 'hanging in the top position', 'descending',
                        'undefined state']
         self._cur_state = self.states[4]
-        self._repeats = 0
+        self._pure_repeats = 0
+        self._impure_repeats = 0
         self._failed_state_detection_attempts = 0
         self.process_current_state = {self.states[0]: self.process_hanging_in_bottom_position,
                                       self.states[1]: self.process_ascending,
@@ -30,6 +31,9 @@ class PoseProcessor:
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
         self._chin_point = []
         self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
+        self._boundary_distance_between_chin_and_wrist = None
+        self.chin_to_wrists_raise_ratio_to_fix_attempt = chin_to_wrists_raise_ratio_to_fix_attempt
+        self._pull_up_attempt_flag = False
 
         self.queue_history = 3
         self.last_wrist_y_deviations = deque(maxlen=self.queue_history)
@@ -38,8 +42,6 @@ class PoseProcessor:
         self.deviation_per_frame_threshold = None
         self.prev_shoulders_y = None
         self.prev_wrists_y = None
-
-
 
     def get_wrists_level_angle(self):
         return self._cur_wrists_level_angle
@@ -59,8 +61,11 @@ class PoseProcessor:
     def get_cur_state(self):
         return self._cur_state
 
-    def get_repeats(self):
-        return self._repeats
+    def get_pure_repeats(self):
+        return self._pure_repeats
+
+    def get_impure_repeats(self):
+        return self._impure_repeats
 
     def get_chin_point(self):
         return self._chin_point
@@ -71,7 +76,8 @@ class PoseProcessor:
     left_leg_angle = property(get_left_leg_angle)
     right_leg_angle = property(get_right_leg_angle)
     cur_state = property(get_cur_state)
-    repeats = property(get_repeats)
+    pure_repeats = property(get_pure_repeats)
+    impure_repeats = property(get_impure_repeats)
     chin_point = property(get_chin_point)
 
     def zero_failed_state_detection_attempts(self):
@@ -109,14 +115,23 @@ class PoseProcessor:
         distance_between_wrists_and_shoulders = self.find_distance_between_wrists_and_shoulders(points)
         self.deviation_per_frame_threshold = distance_between_wrists_and_shoulders * self.wrists_shoulders_distance_deviation_per_frame_threshold
 
-    def find_distance_between_wrists_and_shoulders(self, points):
+    @staticmethod
+    def find_distance_between_wrists_and_shoulders(points):
         avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
         avg_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
         return abs(avg_wrists_y - avg_shoulders_y)
 
+    def find_distance_between_wrists_and_chin(self, points):
+        avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
+        return self.chin_point[1] - avg_wrists_y
+
+    def define_initial_distance_between_wrists_and_chin(self, points):
+        self._boundary_distance_between_chin_and_wrist = self.find_distance_between_wrists_and_chin(points) * (1 - self.chin_to_wrists_raise_ratio_to_fix_attempt)
+
     def is_there_initial_position(self, points):
         self.define_wrists_shoulders_deviation_per_frame(points)
         self.reset_shifts()
+        self.define_initial_distance_between_wrists_and_chin(points)
 
         angle_in_arms_is_valid = self.are_arms_straight(points)
         wrists_are_over_body = self.is_wrists_over_body(points)
@@ -131,32 +146,53 @@ class PoseProcessor:
         self._cur_left_leg_angle, self._cur_right_leg_angle = -math.inf, -math.inf
         if self.are_points_existing(points['LHip'], points['LKnee'], points['LAnkle']):
             self._cur_left_leg_angle = self.get_angle_between_three_points(points['LHip'], points['LKnee'],
-                                                                                     points['LAnkle'])
+                                                                           points['LAnkle'])
 
         if self.are_points_existing(points['RHip'], points['RKnee'], points['RAnkle']):
             self._cur_right_leg_angle = self.get_angle_between_three_points(points['RHip'], points['RKnee'],
-                                                                           points['RAnkle'])
+                                                                            points['RAnkle'])
 
         return True if self._cur_left_leg_angle < self.leg_angle_threshold and self._cur_right_leg_angle < self.leg_angle_threshold else False
 
+    def inc_pure_repeats_amount(self):
+        self._pure_repeats += 1
+        self.reset_attempt()
 
-    def inc_repeats_amount(self):
-        self._repeats += 1
+
+    def inc_impure_repeats_amount(self):
+        self._impure_repeats += 1
+        self.reset_attempt()
+
+    def reset_attempt(self):
+        self._pull_up_attempt_flag = False
 
     def process_ascending(self, points):
         neck_is_over_wrists_level = self.is_neck_over_wrists_level(points)
 
         self.update_wrist_y_deviations(points)
         self.update_shoulder_y_deviations(points)
+        self.check_impure_pull_up(points)
 
         if neck_is_over_wrists_level:
             wrists_deviations_sum = sum(self.last_wrist_y_deviations)
             shoulders_deviations_sum = sum(self.last_shoulder_y_deviations)
             # just debug, will be deleted
-            #print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
+            # print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
             if shoulders_deviations_sum > wrists_deviations_sum:
-                self.inc_repeats_amount()
+                self.inc_pure_repeats_amount()
                 self._cur_state = self.states[2]
+
+    def check_impure_pull_up(self, points):
+        cur_distance_between_chin_and_wrists = self.find_distance_between_wrists_and_chin(points)
+
+        print(cur_distance_between_chin_and_wrists, self._boundary_distance_between_chin_and_wrist)
+        if not self._pull_up_attempt_flag:
+            self._pull_up_attempt_flag = True if cur_distance_between_chin_and_wrists <= self._boundary_distance_between_chin_and_wrist else False
+        else:
+            impure_pull_up_is_done = True if cur_distance_between_chin_and_wrists > self._boundary_distance_between_chin_and_wrist else False
+            if impure_pull_up_is_done:
+                self.inc_impure_repeats_amount()
+                self._pull_up_attempt_flag = False
 
     def update_wrist_y_deviations(self, points):
         cur_avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
