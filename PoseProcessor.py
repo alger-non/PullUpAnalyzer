@@ -9,7 +9,8 @@ from Drawer import Drawer
 
 class PoseProcessor:
     def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
-                 neck_chin_top_of_head_ratio, chin_to_wrists_raise_ratio_to_fix_attempt=0.7):
+                 neck_chin_top_of_head_ratio, chin_to_wrists_raise_ratio_to_start_attempt=0.7,
+                 chin_to_wrists_raise_ration_to_finish_attempt=0.1):
         self._cur_wrists_level_angle = None
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
         self._cur_left_leg_angle, self._cur_right_leg_angle = None, None
@@ -31,8 +32,10 @@ class PoseProcessor:
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
         self._chin_point = []
         self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
-        self._boundary_distance_between_chin_and_wrist = None
-        self.chin_to_wrists_raise_ratio_to_fix_attempt = chin_to_wrists_raise_ratio_to_fix_attempt
+        self._boundary_distance_between_chin_and_wrist_to_start_attempt = None
+        self._boundary_distance_between_chin_and_wrist_to_finish_attempt = None
+        self.chin_to_wrists_raise_ratio_to_start_attempt = chin_to_wrists_raise_ratio_to_start_attempt
+        self.chin_to_wrists_raise_ratio_to_finish_attempt = chin_to_wrists_raise_ration_to_finish_attempt
         self._pull_up_attempt_flag = False
 
         self.queue_history = 3
@@ -125,12 +128,14 @@ class PoseProcessor:
         avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
         return None if not self.chin_point else self.chin_point[1] - avg_wrists_y
 
-
     def define_initial_distance_between_wrists_and_chin(self, points):
         distance_between_wrists_and_chin = self.find_distance_between_wrists_and_chin(points)
         if not distance_between_wrists_and_chin:
             return
-        self._boundary_distance_between_chin_and_wrist = distance_between_wrists_and_chin * (1 - self.chin_to_wrists_raise_ratio_to_fix_attempt)
+        self._boundary_distance_between_chin_and_wrist_to_start_attempt = distance_between_wrists_and_chin * (
+                    1 - self.chin_to_wrists_raise_ratio_to_start_attempt)
+        self._boundary_distance_between_chin_and_wrist_to_finish_attempt = distance_between_wrists_and_chin * (
+                    1 - self.chin_to_wrists_raise_ratio_to_finish_attempt)
 
     def is_there_initial_position(self, points):
         self.define_wrists_shoulders_deviation_per_frame(points)
@@ -162,7 +167,6 @@ class PoseProcessor:
         self._pure_repeats += 1
         self.reset_attempt()
 
-
     def inc_impure_repeats_amount(self):
         self._impure_repeats += 1
         self.reset_attempt()
@@ -183,6 +187,7 @@ class PoseProcessor:
             # just debug, will be deleted
             # print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
             if shoulders_deviations_sum > wrists_deviations_sum:
+                print(self.chin_point, points['LWrist'], points['LWrist'])
                 self.inc_pure_repeats_amount()
                 self._cur_state = self.states[2]
 
@@ -191,11 +196,11 @@ class PoseProcessor:
             return
         cur_distance_between_chin_and_wrists = self.find_distance_between_wrists_and_chin(points)
 
-        #print(cur_distance_between_chin_and_wrists, self._boundary_distance_between_chin_and_wrist)
+        # print(cur_distance_between_chin_and_wrists, self._boundary_distance_between_chin_and_wrist)
         if not self._pull_up_attempt_flag:
-            self._pull_up_attempt_flag = True if cur_distance_between_chin_and_wrists <= self._boundary_distance_between_chin_and_wrist else False
+            self._pull_up_attempt_flag = True if cur_distance_between_chin_and_wrists <= self._boundary_distance_between_chin_and_wrist_to_start_attempt else False
         else:
-            impure_pull_up_is_done = True if cur_distance_between_chin_and_wrists > self._boundary_distance_between_chin_and_wrist else False
+            impure_pull_up_is_done = True if cur_distance_between_chin_and_wrists > self._boundary_distance_between_chin_and_wrist_to_finish_attempt else False
             if impure_pull_up_is_done:
                 self.inc_impure_repeats_amount()
                 self._pull_up_attempt_flag = False
@@ -237,7 +242,16 @@ class PoseProcessor:
     def is_there_hang(self, points):
         wrists_is_on_same_level = self.is_wrists_on_same_level(points)
         wrists_is_higher_than_elbows = self.are_wrists_higher_than_elbows(points)
-        return True if wrists_is_on_same_level and wrists_is_higher_than_elbows else False
+        head_is_between_arms = self.is_head_between_arms(points)
+        return True if wrists_is_on_same_level and wrists_is_higher_than_elbows and head_is_between_arms else False
+
+    def is_head_between_arms(self, points):
+        if not (points['LWrist'] and points['RWrist'] and points['Nose']):
+            return False
+
+        min_x_of_wrist = min(points['LWrist'][0], points['RWrist'][0])
+        max_x_of_wrist = max(points['LWrist'][0], points['RWrist'][0])
+        return True if min_x_of_wrist < points['Nose'][0] < max_x_of_wrist else False
 
     @staticmethod
     def are_wrists_higher_than_elbows(points):
