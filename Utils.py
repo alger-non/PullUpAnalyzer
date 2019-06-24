@@ -29,6 +29,7 @@ body25_parts = {"Nose": 0,
               "RHeel": 24,
               "Background": 25}
 
+
 def get_vector_module(vector: list):
     return pow(pow(vector[0], 2) + pow(vector[1], 2), 0.5)
 
@@ -36,6 +37,9 @@ def get_vector_module(vector: list):
 def get_angle_between_vectors(vector_a: list, vector_b: list):
     vectors_product = np.dot(vector_a, vector_b)
     angle_cos = vectors_product / (get_vector_module(vector_a) * get_vector_module(vector_b))
+    #set cos-value range
+    angle_cos = np.clip(angle_cos, -1, 1)
+    print(angle_cos)
     angle_in_radians = math.acos(angle_cos)
     degrees = math.degrees(angle_in_radians)
     return int(degrees)
