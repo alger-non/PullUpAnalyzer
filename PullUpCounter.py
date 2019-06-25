@@ -6,6 +6,7 @@ from PoseProcessor import PoseProcessor
 from VideoProcessor import VideoProcessor
 
 
+
 def extract_data_from_dir(dir_name):
     file_names = []
     dir_names = []
@@ -33,7 +34,7 @@ cap_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 cap_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 output_video = os.path.join(output_dir, f'{filename}_out.avi')
 
-video_writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"XVID"), 24,
+video_writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"mp4v"), 24,
                                (cap_width, cap_height))
 required_points = {"Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5, "LElbow": 6,
                    "LWrist": 7, "MidHip": 8, "RHip": 9, "RKnee": 10, "RAnkle": 11, "LHip": 12, "LKnee": 13,

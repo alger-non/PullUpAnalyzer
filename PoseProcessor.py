@@ -88,6 +88,7 @@ class PoseProcessor:
 
     def inc_failed_state_detection_attempts(self):
         self._failed_state_detection_attempts += 1
+        self._pure_repeats = 0
 
     def check_failed_state_detection_attempts_amount(self):
         if self._failed_state_detection_attempts > self.failed_attempts_amount_threshold:
@@ -325,7 +326,7 @@ class PoseProcessor:
 
         left_wrist_point, right_wrist_point = points['LWrist'], points['RWrist']
         avg_wrists_y = (left_wrist_point[1] + right_wrist_point[1]) / 2
-        return True if self.chin_point[1] < avg_wrists_y else False
+        return True if self.chin_point[1] <= avg_wrists_y else False
 
     def define_state(self, points):
         self.define_chin(points)
