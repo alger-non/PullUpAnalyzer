@@ -14,6 +14,7 @@ class VideoProcessor:
         self._threshold = threshold
         self._debug = False
         self._default_in_size = default_in_size
+        self._drawer = ResultsDrawer()
 
     def enable_debug(self):
         self._debug = True
@@ -50,7 +51,7 @@ class VideoProcessor:
                 yield frame
 
     def display_debug_info(self, frame, cap):
-        ResultsDrawer.display_info(frame, cap, self._pose_processor)
+        self._drawer.display_info(frame, cap, self._pose_processor)
 
     def get_threshold(self):
         return self._threshold

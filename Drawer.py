@@ -7,6 +7,7 @@ class Drawer:
     GREEN_COLOR = (0, 255, 0)
     BLACK_COLOR = (0, 0, 0)
     PINK_COLOR = (50, 255, 50)
+    WHITE_COLOR = (255, 255, 255)
 
     def __init__(self):
         pass
