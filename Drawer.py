@@ -6,7 +6,6 @@ class Drawer:
     BLUE_COLOR = (255, 0, 0)
     GREEN_COLOR = (0, 255, 0)
     BLACK_COLOR = (0, 0, 0)
-    PINK_COLOR = (50, 255, 50)
     WHITE_COLOR = (255, 255, 255)
 
     def __init__(self):
@@ -59,29 +58,36 @@ class Drawer:
 
     # Draws glyph in rectangle with side=a and a top left corner = (x,y)
     @staticmethod
-    def glyph_asc(frame, x, y, a, line_color=BLACK_COLOR, line_thickness=2):
+    def glyph_asc(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
         Drawer.down_arrow(frame, x, y, a, line_color, line_thickness)
         Drawer.down_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
 
     @staticmethod
-    def glyph_desc(frame, x, y, a, line_color=BLACK_COLOR, line_thickness=2):
+    def glyph_desc(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
         Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
         Drawer.up_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
 
     @staticmethod
-    def glyph_bottom_hanging(frame, x, y, a, line_color=BLACK_COLOR, line_thickness=2):
+    def glyph_bottom_hanging(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
         Drawer.down_arrow(frame, x, y, a, line_color, line_thickness)
 
     @staticmethod
-    def glyph_top_hanging(frame, x, y, a, line_color=BLACK_COLOR, line_thickness=2):
+    def glyph_top_hanging(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
         Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
 
     @staticmethod
     def glyph_undefined(frame, x, y, text_color=RED_COLOR, thickness=2, font_scale=1):
-        cv2.putText(frame, "Undefined", (x, y,), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color, thickness,
+        cv2.putText(frame, '??', (x, y,), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color, thickness,
                     lineType=cv2.LINE_AA)
 
+    # @staticmethod
+    # def glyph_cross(frame, x, y, line_color=RED_COLOR, thickness=2):
+    #     cv2.line(frame,(0,0), (x,y),line_color,thickness)
+    #     cv2.line(frame, (0,x), (x,0), line_color, thickness)
+
     @staticmethod
-    def glyph_cross(frame, x, y, line_color=RED_COLOR, thickness=2):
-        cv2.line(frame,(0,0), (x,y),line_color,thickness)
-        cv2.line(frame, (0,x), (x,0), line_color, thickness)
+    def print_message_with_text_edging(frame, x, y, value, thickness=2, text_color=RED_COLOR):
+        Drawer.print_message(frame, f'{value}', x, y, thickness=thickness + 5,
+                             text_color=Drawer.YELLOW_COLOR, font_scale=1.1)
+        Drawer.print_message(frame, f'{value}', x, y, thickness=thickness, text_color=text_color,
+                             font_scale=1.1)

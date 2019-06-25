@@ -4,8 +4,6 @@ import math
 import queue
 from collections import deque
 
-from Drawer import Drawer
-
 
 class PoseProcessor:
     def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
@@ -24,12 +22,13 @@ class PoseProcessor:
         self._pure_repeats = 0
         self._impure_repeats = 0
         self._failed_state_detection_attempts = 0
+        self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
         self.process_current_state = {self.states[0]: self.process_hanging_in_bottom_position,
                                       self.states[1]: self.process_ascending,
                                       self.states[2]: self.process_hanging_in_top_position,
                                       self.states[3]: self.process_descending,
                                       self.states[4]: self.process_undefined_state}
-        self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
+
         self._chin_point = []
         self.neck_chin_ears_ratio = neck_chin_top_of_head_ratio
         self._boundary_distance_between_chin_and_wrist_to_start_attempt = None
@@ -88,7 +87,7 @@ class PoseProcessor:
 
     def inc_failed_state_detection_attempts(self):
         self._failed_state_detection_attempts += 1
-        self._pure_repeats = 0
+
 
     def check_failed_state_detection_attempts_amount(self):
         if self._failed_state_detection_attempts > self.failed_attempts_amount_threshold:

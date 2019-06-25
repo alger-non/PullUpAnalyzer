@@ -4,6 +4,7 @@ import os
 import json
 from ResultsDrawer import ResultsDrawer
 from os import walk
+from Drawer import Drawer
 
 
 class VideoProcessor:
@@ -14,7 +15,7 @@ class VideoProcessor:
         self._threshold = threshold
         self._debug = False
         self._default_in_size = default_in_size
-        self._drawer = ResultsDrawer()
+        self._drawer = None
 
     def enable_debug(self):
         self._debug = True
@@ -31,6 +32,9 @@ class VideoProcessor:
             filenames.extend(f_names)
             break
         filenames = sorted(filenames)
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        self._drawer = ResultsDrawer(fps)
+
         for filename in filenames:
 
             full_filename_path = os.path.join(json_dir, filename)
@@ -47,11 +51,13 @@ class VideoProcessor:
                     self._pose_processor.define_state(points)
                     if self._debug:
                         # probably add some options for displaying _debug information
-                        self.display_debug_info(frame, cap)
+                        self.display_debug_info(frame, cap, points)
                 yield frame
 
-    def display_debug_info(self, frame, cap):
-        self._drawer.display_info(frame, cap, self._pose_processor)
+    def display_debug_info(self, frame, cap, points):
+        cur_frame_num = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+        self._drawer.display_info(frame, self._pose_processor, cur_frame_num)
+        Drawer.draw_skeleton(frame, points, self._required_pairs)
 
     def get_threshold(self):
         return self._threshold

@@ -32,6 +32,8 @@ cap = cv2.VideoCapture(input_source)
 filename = os.path.basename(input_source).split('.')[0]
 cap_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 cap_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print(int(cap.get(cv2.CAP_PROP_FPS)))
+
 output_video = os.path.join(output_dir, f'{filename}_out.avi')
 
 video_writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"FMP4"), 24,
