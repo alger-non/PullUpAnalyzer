@@ -32,6 +32,7 @@ for input_video in input_videos:
     # next two params disable video displaying
     params['render_pose'] = 0
     params['display'] = 0
+
     params['write_json'] = os.path.join(output_video_dir, f'{input_video.split(".")[0]}_json')
     params['video'] = full_input_video_name
     params["model_folder"] = models_dir

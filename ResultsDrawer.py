@@ -132,14 +132,14 @@ class ResultsDrawer:
         Drawer.print_message(frame, f'Fails: ', x, y)
 
         if not self.impure_reps_font_animation_queue:
-            Drawer.print_message_with_text_edging(frame, x + 100, y, f'{now_fails}')
+            Drawer.print_message_with_text_edging(frame, x + 100, y, f'{now_fails}', text_color=Drawer.DARK_RED_COLOR, border_size=3, border_color=Drawer.ORANGE_COLOR)
         else:
             self.draw_animation_from_queue(frame, self.impure_reps_font_animation_queue, x + 100, y)
 
     @staticmethod
     def draw_animation_from_queue(frame, animation_queue: deque, x, y):
         draw_data = animation_queue.pop()
-        Drawer.print_message_with_text_edging(frame, x, y, draw_data[0], draw_data[1], draw_data[2])
+        Drawer.print_message_with_text_edging(frame, x, y, draw_data[0], thickness=draw_data[1], text_color=draw_data[2])
 
     def time(self, frame, phase, x, y):
 
@@ -159,13 +159,13 @@ class ResultsDrawer:
     @staticmethod
     def draw_info_region(frame):
         overlay = frame.copy()
-        x, y, w, h = 0, 0, 400, 100
+        x, y, w, h = 0, 0, 355, 80
         cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
         alpha = 0.7
         return cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
 
     def draw_line_between_wrists(self, frame, points):
-        color = Drawer.BLACK_COLOR
+        color = Drawer.YELLOW_COLOR
         thickness = 3
         if self.pure_reps_line_animation_queue:
             thickness, color = self.pure_reps_line_animation_queue.pop()
@@ -173,6 +173,10 @@ class ResultsDrawer:
             thickness, color = self.impure_reps_line_animation_queue.pop()
 
         cv2.line(frame, points['LWrist'], points['RWrist'], color, thickness)
+
+    def draw_chin_point(self, frame, phase: PoseProcessor):
+        cv2.circle(frame, tuple(phase.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
+
 
     def display_info(self, frame, phase: PoseProcessor):
         new_frame = self.draw_info_region(frame)
@@ -185,4 +189,3 @@ class ResultsDrawer:
 
     def display_skeleton(self, frame, points, required_points):
         Drawer.draw_skeleton(frame, points, required_points)
-        self.draw_line_between_wrists(frame, points)

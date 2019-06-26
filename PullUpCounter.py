@@ -6,8 +6,7 @@ from PoseProcessor import PoseProcessor
 from VideoProcessor import VideoProcessor
 
 
-
-def extract_data_from_dir(dir_name):
+def extract_resources_from_dir(dir_name):
     file_names = []
     dir_names = []
     for root, d_names, f_names in walk(dir_name):
@@ -21,12 +20,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('input_dir', help='directory containing source video and json data directory')
 parser.add_argument('output_dir', help='directory in which will be saved the final video')
 args = parser.parse_args()
-input_source, json_dir = extract_data_from_dir(args.input_dir)
+input_source, json_dir = extract_resources_from_dir(args.input_dir)
 output_dir = args.output_dir
 
-
 pose_processor = PoseProcessor(30, 10, 5, 1 / 2)
-
 
 cap = cv2.VideoCapture(input_source)
 filename = os.path.basename(input_source).split('.')[0]
@@ -49,7 +46,6 @@ required_pairs = (['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'R
 
 video_processor = VideoProcessor(pose_processor, required_points, required_pairs)
 video_processor.enable_debug()
-
 
 for processed_frame in video_processor.process_video_with_raw_data(cap, json_dir):
     cv2.imshow('Processed frame', processed_frame)

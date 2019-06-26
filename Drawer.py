@@ -8,12 +8,13 @@ class Drawer:
     BLACK_COLOR = (0, 0, 0)
     WHITE_COLOR = (255, 255, 255)
     ORANGE_COLOR = (16, 108, 168)
+    DARK_RED_COLOR = (1, 1, 75)
 
     def __init__(self):
         pass
 
     @staticmethod
-    def draw_skeleton(frame, points, pose_pairs, line_color=BLACK_COLOR, circle_color=RED_COLOR, radius=8,
+    def draw_skeleton(frame, points, pose_pairs, line_color=YELLOW_COLOR, circle_color=RED_COLOR, radius=8,
                       line_thickness=3):
 
         for pair in pose_pairs:
@@ -87,8 +88,7 @@ class Drawer:
     #     cv2.line(frame, (0,x), (x,0), line_color, thickness)
 
     @staticmethod
-    def print_message_with_text_edging(frame, x, y, value, thickness=2, text_color=RED_COLOR):
-        Drawer.print_message(frame, f'{value}', x, y, thickness=thickness + 5,
-                             text_color=Drawer.YELLOW_COLOR, font_scale=1.1)
+    def print_message_with_text_edging(frame, x, y, value, border_size=5, thickness=2, text_color=RED_COLOR, border_color=YELLOW_COLOR):
+        Drawer.print_message(frame, f'{value}', x, y, text_color=border_color,  thickness=thickness + border_size, font_scale=1.1)
         Drawer.print_message(frame, f'{value}', x, y, thickness=thickness, text_color=text_color,
                              font_scale=1.1)

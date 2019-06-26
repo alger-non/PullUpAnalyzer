@@ -57,6 +57,9 @@ class VideoProcessor:
     def display_debug_info(self, frame, points):
         new_frame = self._drawer.display_info(frame, self._pose_processor)
         self._drawer.display_skeleton(new_frame, points, self._required_pairs)
+        self._drawer.draw_line_between_wrists(new_frame, points)
+        self._drawer.draw_chin_point(new_frame, self._pose_processor)
+
         return new_frame
 
     def get_threshold(self):
