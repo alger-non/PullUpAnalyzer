@@ -11,11 +11,7 @@ class ResultsDrawer:
     ANIMATION_DURATION_IN_SEC = 1
     ANIMATION_MIN_FONT_THICKNESS = 2
     ANIMATION_MAX_FONT_THICKNESS = 9
-    ANIMATION_REP_INITIAL_COLOR = Drawer.RED_COLOR
-    ANIMATION_REP_FINAL_COLOR = Drawer.WHITE_COLOR
 
-    ANIMATION_FAIL_INITIAL_COLOR = Drawer.RED_COLOR
-    ANIMATION_FAIL_FINAL_COLOR = (16, 108, 168)
 
 
     def __init__(self, fps):
@@ -98,7 +94,7 @@ class ResultsDrawer:
     def fail(self, frame, phase: PoseProcessor, x, y):
         now_fails = phase.impure_repeats
         if now_fails != ResultsDrawer.OLD_FAILS:
-            self.generate_animation_queue(self.impure_reps_animation_queue, now_fails, Drawer.RED_COLOR, (16, 108, 168))
+            self.generate_animation_queue(self.impure_reps_animation_queue, now_fails, Drawer.RED_COLOR, Drawer.ORANGE_COLOR)
             ResultsDrawer.OLD_FAILS = now_fails
         Drawer.print_message(frame, f'Fails: ', x, y)
 
