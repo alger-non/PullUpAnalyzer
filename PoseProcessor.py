@@ -138,14 +138,17 @@ class PoseProcessor:
                     1 - self.chin_to_wrists_raise_ratio_to_finish_attempt)
 
     def is_there_initial_position(self, points):
-        self.define_wrists_shoulders_deviation_per_frame(points)
-        self.reset_shifts()
-        self.define_initial_distance_between_wrists_and_chin(points)
+
 
         angle_in_arms_is_valid = self.are_arms_straight(points)
         wrists_are_over_body = self.is_wrists_over_body(points)
         legs_are_straight = self.are_legs_straight(points)
-        return True if angle_in_arms_is_valid and wrists_are_over_body and legs_are_straight else False
+        if angle_in_arms_is_valid and wrists_are_over_body and legs_are_straight:
+            self.define_wrists_shoulders_deviation_per_frame(points)
+            self.reset_shifts()
+            self.define_initial_distance_between_wrists_and_chin(points)
+            return True
+        return False
 
     def are_legs_straight(self, points):
         # legs are straight if:
@@ -161,7 +164,7 @@ class PoseProcessor:
             self._cur_right_leg_angle = self.get_angle_between_three_points(points['RHip'], points['RKnee'],
                                                                             points['RAnkle'])
 
-        return True if self._cur_left_leg_angle < self.leg_angle_threshold and self._cur_right_leg_angle < self.leg_angle_threshold else False
+        return self._cur_left_leg_angle < self.leg_angle_threshold and self._cur_right_leg_angle < self.leg_angle_threshold
 
     def inc_pure_repeats_amount(self):
         self._pure_repeats += 1
@@ -187,9 +190,13 @@ class PoseProcessor:
             # just debug, will be deleted
             # print(wrists_deviations_sum, '  |  ', shoulders_deviations_sum)
             if shoulders_deviations_sum > wrists_deviations_sum:
-                print(self.chin_point, points['LWrist'], points['LWrist'])
                 self.inc_pure_repeats_amount()
                 self._cur_state = self.states[2]
+
+        elif self.is_there_initial_position(points):
+            self._cur_state = self.states[0]
+
+
 
     def check_impure_pull_up(self, points):
         if not self.chin_point:
@@ -203,6 +210,7 @@ class PoseProcessor:
             impure_pull_up_is_done = True if cur_distance_between_chin_and_wrists > self._boundary_distance_between_chin_and_wrist_to_finish_attempt else False
             if impure_pull_up_is_done:
                 self.inc_impure_repeats_amount()
+                self._cur_state = self.states[2]
                 self._pull_up_attempt_flag = False
 
     def update_wrist_y_deviations(self, points):
@@ -243,7 +251,7 @@ class PoseProcessor:
         wrists_is_on_same_level = self.is_wrists_on_same_level(points)
         wrists_is_higher_than_elbows = self.are_wrists_higher_than_elbows(points)
         head_is_between_arms = self.is_head_between_arms(points)
-        return True if wrists_is_on_same_level and wrists_is_higher_than_elbows and head_is_between_arms else False
+        return wrists_is_on_same_level and wrists_is_higher_than_elbows and head_is_between_arms
 
     @staticmethod
     def is_head_between_arms(points):
@@ -252,7 +260,7 @@ class PoseProcessor:
 
         min_x_of_wrist = min(points['LWrist'][0], points['RWrist'][0])
         max_x_of_wrist = max(points['LWrist'][0], points['RWrist'][0])
-        return True if min_x_of_wrist < points['Neck'][0] < max_x_of_wrist else False
+        return min_x_of_wrist < points['Neck'][0] < max_x_of_wrist
 
     @staticmethod
     def are_wrists_higher_than_elbows(points):
@@ -261,7 +269,7 @@ class PoseProcessor:
 
         left_wrist_y, right_wrist_y = points['LWrist'][1], points['RWrist'][1]
         left_elbow_y, right_elbow_y = points['LElbow'][1], points['RElbow'][1]
-        return True if left_wrist_y < left_elbow_y and right_wrist_y < right_elbow_y else False
+        return left_wrist_y < left_elbow_y and right_wrist_y < right_elbow_y
 
     @staticmethod
     def are_points_existing(point_a, point_b, point_c):
@@ -288,7 +296,7 @@ class PoseProcessor:
         ys = (point[1] for point in copy_points.values() if point)
 
         lowest_y = min(ys)
-        return True if left_wrist_y < lowest_y and right_wrist_y < lowest_y else False
+        return left_wrist_y < lowest_y and right_wrist_y < lowest_y
 
     def are_arms_straight(self, points):
         self._cur_left_arm_angle, self._cur_right_arm_angle = math.inf, math.inf
@@ -300,7 +308,7 @@ class PoseProcessor:
             self._cur_right_arm_angle = self.get_angle_between_three_points(points['RWrist'], points['RElbow'],
                                                                             points['RShoulder'])
 
-        return True if self._cur_left_arm_angle < self.arm_angle_threshold and self._cur_right_arm_angle < self.arm_angle_threshold else False
+        return self._cur_left_arm_angle < self.arm_angle_threshold and self._cur_right_arm_angle < self.arm_angle_threshold
 
     def is_wrists_on_same_level(self, points):
         if not (points['LWrist'] and points['RWrist']):
@@ -317,7 +325,7 @@ class PoseProcessor:
         angle_in_radians = math.atan(delta_y / delta_x)
         self._cur_wrists_level_angle = int(math.degrees(angle_in_radians))
 
-        return True if self._cur_wrists_level_angle <= self.wrists_level_angle_threshold else False
+        return self._cur_wrists_level_angle <= self.wrists_level_angle_threshold
 
     def is_chin_over_wrists_level(self, points):
         if not (points['LWrist'] and points['RWrist'] and self._chin_point):
@@ -325,7 +333,7 @@ class PoseProcessor:
 
         left_wrist_point, right_wrist_point = points['LWrist'], points['RWrist']
         avg_wrists_y = (left_wrist_point[1] + right_wrist_point[1]) / 2
-        return True if self.chin_point[1] <= avg_wrists_y else False
+        return self.chin_point[1] <= avg_wrists_y
 
     def define_state(self, points):
         self.define_chin(points)

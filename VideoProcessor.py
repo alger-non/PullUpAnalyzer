@@ -51,13 +51,15 @@ class VideoProcessor:
                     self._pose_processor.define_state(points)
                     if self._debug:
                         # probably add some options for displaying _debug information
-                        self.display_debug_info(frame, cap, points)
+                        frame = self.display_debug_info(frame, points)
                 yield frame
 
-    def display_debug_info(self, frame, cap, points):
-        cur_frame_num = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-        self._drawer.display_info(frame, self._pose_processor, cur_frame_num)
-        Drawer.draw_skeleton(frame, points, self._required_pairs)
+    def display_debug_info(self, frame, points):
+
+        new_frame = self._drawer.display_info(frame, self._pose_processor)
+        Drawer.draw_skeleton(new_frame, points, self._required_pairs)
+        return new_frame
+
 
     def get_threshold(self):
         return self._threshold

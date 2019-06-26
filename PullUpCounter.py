@@ -32,11 +32,11 @@ cap = cv2.VideoCapture(input_source)
 filename = os.path.basename(input_source).split('.')[0]
 cap_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 cap_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-print(int(cap.get(cv2.CAP_PROP_FPS)))
+fps = int(cap.get(cv2.CAP_PROP_FPS))
 
 output_video = os.path.join(output_dir, f'{filename}_out.avi')
 
-video_writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"FMP4"), 24,
+video_writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"FMP4"), fps,
                                (cap_width, cap_height))
 required_points = {"Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5, "LElbow": 6,
                    "LWrist": 7, "MidHip": 8, "RHip": 9, "RKnee": 10, "RAnkle": 11, "LHip": 12, "LKnee": 13,
