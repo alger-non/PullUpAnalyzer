@@ -13,7 +13,7 @@ class Drawer:
         pass
 
     @staticmethod
-    def draw_skeleton(frame, points, pose_pairs, line_color=YELLOW_COLOR, circle_color=RED_COLOR, radius=8,
+    def draw_skeleton(frame, points, pose_pairs, line_color=BLACK_COLOR, circle_color=RED_COLOR, radius=8,
                       line_thickness=3):
 
         for pair in pose_pairs:

@@ -42,7 +42,7 @@ required_points = {"Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 
                    "LWrist": 7, "MidHip": 8, "RHip": 9, "RKnee": 10, "RAnkle": 11, "LHip": 12, "LKnee": 13,
                    "LAnkle": 14, "REar": 17, "LEar": 18}
 required_pairs = (['Neck', 'RShoulder'], ['Neck', 'LShoulder'], ['RShoulder', 'RElbow'], ['LShoulder', 'LElbow'],
-                  ['RElbow', 'RWrist'], ['LElbow', 'LWrist'], ['LWrist', 'RWrist'],
+                  ['RElbow', 'RWrist'], ['LElbow', 'LWrist'],
                   ['Neck', 'MidHip'],
                   ['MidHip', 'LHip'], ['MidHip', 'RHip'], ['RHip', 'RKnee'], ['LHip', 'LKnee'], ['LKnee', 'LAnkle'],
                   ['RKnee', 'RAnkle'])

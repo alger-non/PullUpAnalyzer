@@ -55,17 +55,11 @@ class VideoProcessor:
                 yield frame
 
     def display_debug_info(self, frame, points):
-
         new_frame = self._drawer.display_info(frame, self._pose_processor)
-        Drawer.draw_skeleton(new_frame, points, self._required_pairs)
+        self._drawer.display_skeleton(new_frame, points, self._required_pairs)
         return new_frame
-
 
     def get_threshold(self):
         return self._threshold
 
-    def set_threshold(self, threshold):
-        # have to add some constraint logic on threshold
-        self._threshold = threshold
-
-    threshold = property(get_threshold, set_threshold)
+    threshold = property(get_threshold)
