@@ -41,9 +41,9 @@ for input_video in input_videos:
         open_pose = op.WrapperPython(3)
         open_pose.configure(params)
         open_pose.execute()
+        os.rename(full_input_video_name, os.path.join(output_video_dir, input_video))
+
     except Exception as e:
         print(e)
-        sys.exit(-1)
-    os.rename(full_input_video_name, os.path.join(output_video_dir, input_video))
 
 print("Preprocessor successfully finished.")

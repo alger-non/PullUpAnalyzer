@@ -52,7 +52,7 @@ class ResultsDrawer:
                                                Drawer.WHITE_COLOR)
             self.generate_line_animation_queue(self.pure_reps_line_animation_queue,
                                                ResultsDrawer.ANIMATION_MIN_LINE_THICKNESS,
-                                               ResultsDrawer.ANIMATION_MAX_LINE_THICKNESS, Drawer.BLACK_COLOR,
+                                               ResultsDrawer.ANIMATION_MAX_LINE_THICKNESS, Drawer.YELLOW_COLOR,
                                                Drawer.GREEN_COLOR)
             ResultsDrawer.OLD_REPEATS = now_repeats
 
@@ -86,7 +86,7 @@ class ResultsDrawer:
                                       animation_max_font_thickness, animation_initial_color,
                                       animation_final_color):
         line_thickness_step = (
-                                          animation_max_font_thickness - animation_min_font_thickness + 1) / self.animation_queue_size
+                                      animation_max_font_thickness - animation_min_font_thickness + 1) / self.animation_queue_size
         line_thickness = animation_min_font_thickness
         color_step = self.define_bgr_color_step(animation_initial_color,
                                                 animation_final_color)
@@ -126,20 +126,22 @@ class ResultsDrawer:
                                                Drawer.ORANGE_COLOR)
             self.generate_line_animation_queue(self.impure_reps_line_animation_queue,
                                                ResultsDrawer.ANIMATION_MIN_LINE_THICKNESS,
-                                               ResultsDrawer.ANIMATION_MAX_LINE_THICKNESS, Drawer.BLACK_COLOR,
+                                               ResultsDrawer.ANIMATION_MAX_LINE_THICKNESS, Drawer.YELLOW_COLOR,
                                                Drawer.RED_COLOR)
             ResultsDrawer.OLD_FAILS = now_fails
         Drawer.print_message(frame, f'Fails: ', x, y)
 
         if not self.impure_reps_font_animation_queue:
-            Drawer.print_message_with_text_edging(frame, x + 100, y, f'{now_fails}', text_color=Drawer.DARK_RED_COLOR, border_size=3, border_color=Drawer.ORANGE_COLOR)
+            Drawer.print_message_with_text_edging(frame, x + 100, y, f'{now_fails}', text_color=Drawer.DARK_RED_COLOR,
+                                                  border_size=3, border_color=Drawer.ORANGE_COLOR)
         else:
             self.draw_animation_from_queue(frame, self.impure_reps_font_animation_queue, x + 100, y)
 
     @staticmethod
     def draw_animation_from_queue(frame, animation_queue: deque, x, y):
         draw_data = animation_queue.pop()
-        Drawer.print_message_with_text_edging(frame, x, y, draw_data[0], thickness=draw_data[1], text_color=draw_data[2])
+        Drawer.print_message_with_text_edging(frame, x, y, draw_data[0], thickness=draw_data[1],
+                                              text_color=draw_data[2])
 
     def time(self, frame, phase, x, y):
 
@@ -174,9 +176,9 @@ class ResultsDrawer:
 
         cv2.line(frame, points['LWrist'], points['RWrist'], color, thickness)
 
-    def draw_chin_point(self, frame, phase: PoseProcessor):
+    @staticmethod
+    def draw_chin_point(frame, phase: PoseProcessor):
         cv2.circle(frame, tuple(phase.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
-
 
     def display_info(self, frame, phase: PoseProcessor):
         new_frame = self.draw_info_region(frame)
@@ -186,6 +188,6 @@ class ResultsDrawer:
         self.time(new_frame, phase, 0, 75)
         return new_frame
 
-
-    def display_skeleton(self, frame, points, required_points):
+    @staticmethod
+    def display_skeleton(frame, points, required_points):
         Drawer.draw_skeleton(frame, points, required_points)

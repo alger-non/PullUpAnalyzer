@@ -24,11 +24,22 @@ def get_vector_from_points(point_a: list, point_b: list):
     return vector
 
 
-def extract_required_points(points_list, needed_points: dict):
+def extract_required_json_points(points_list, needed_points: dict):
     points = {}
     for joint, joint_number in needed_points.items():
         position = 3 * joint_number
         x, y = (int(points_list[position]), int(points_list[position+1]))
+        if (x, y) == (0, 0):
+            points[joint] = None
+        else:
+            points[joint] = (x, y)
+    return points
+
+
+def extract_required_points(points_lists, needed_points):
+    points = {}
+    for joint, joint_number in needed_points.items():
+        x, y = (int(x) for x in points_lists[joint_number][:2])
         if (x, y) == (0, 0):
             points[joint] = None
         else:

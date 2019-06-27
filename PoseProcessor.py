@@ -1,7 +1,5 @@
 import Utils
-import cv2
 import math
-import queue
 from collections import deque
 
 
@@ -16,18 +14,17 @@ class PoseProcessor:
         self.arm_angle_threshold = arm_angle_threshold
         self.leg_angle_threshold = leg_angle_threshold
         self.wrists_level_angle_threshold = 5
-        self.states = ['hanging in the bottom position', 'ascending', 'hanging in the top position', 'descending',
-                       'undefined state']
-        self._cur_state = self.states[4]
+        self.states = ('beginning', 'pulling', 'chinning', 'lowering', 'unknown')
+        self._cur_state = 'unknown'
         self._pure_repeats = 0
         self._impure_repeats = 0
         self._failed_state_detection_attempts = 0
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
-        self.process_current_state = {self.states[0]: self.process_hanging_in_bottom_position,
-                                      self.states[1]: self.process_ascending,
-                                      self.states[2]: self.process_hanging_in_top_position,
-                                      self.states[3]: self.process_descending,
-                                      self.states[4]: self.process_undefined_state}
+        self.process_state = {self.states[0]: self.process_beginning,
+                              self.states[1]: self.process_pulling,
+                              self.states[2]: self.process_chinning,
+                              self.states[3]: self.process_lowering,
+                              self.states[4]: self.process_unknown_state}
 
         self._chin_point = []
         self.neck_chin_ears_ratio = neck_chin_top_of_head_ratio
@@ -93,17 +90,17 @@ class PoseProcessor:
         if self._failed_state_detection_attempts > self.failed_attempts_amount_threshold:
             self._cur_state = self.states[4]
 
-    def process_hanging_in_bottom_position(self, points):
+    def process_beginning(self, points):
         angle_in_arms_is_valid = self.are_arms_straight(points)
         if not angle_in_arms_is_valid:
             self._cur_state = self.states[1]
 
-    def process_hanging_in_top_position(self, points):
+    def process_chinning(self, points):
         neck_is_over_wrists_level = self.is_chin_over_wrists_level(points)
         if not neck_is_over_wrists_level:
             self._cur_state = self.states[3]
 
-    def process_undefined_state(self, points):
+    def process_unknown_state(self, points):
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
             self._cur_state = self.states[0]
@@ -177,7 +174,7 @@ class PoseProcessor:
     def reset_attempt(self):
         self._pull_up_attempt_flag = False
 
-    def process_ascending(self, points):
+    def process_pulling(self, points):
         chin_is_over_wrists_level = self.is_chin_over_wrists_level(points)
 
         self.update_wrist_y_deviations(points)
@@ -242,7 +239,7 @@ class PoseProcessor:
         else:
             self.prev_shoulders_y = None
 
-    def process_descending(self, points):
+    def process_lowering(self, points):
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
             self._cur_state = self.states[0]
@@ -339,7 +336,7 @@ class PoseProcessor:
         self.define_chin(points)
         if self.is_there_hang(points):
             self.zero_failed_state_detection_attempts()
-            self.process_current_state[self._cur_state](points)
+            self.process_state[self._cur_state](points)
             return True
         else:
             self.inc_failed_state_detection_attempts()
