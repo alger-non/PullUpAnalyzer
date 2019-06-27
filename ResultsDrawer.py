@@ -1,23 +1,23 @@
 from Timer import Timer
-from PoseProcessor import PoseProcessor
+from PhaseDefiner import PhaseDefiner
 from Drawer import Drawer
 from collections import deque
 import cv2
 
 
 class ResultsDrawer:
-    OLD_REPEATS = 0
-    OLD_FAILS = 0
-    ANIMATION_DURATION_IN_SEC = 1
-    ANIMATION_MIN_FONT_THICKNESS = 2
-    ANIMATION_MAX_FONT_THICKNESS = 9
 
-    ANIMATION_MIN_LINE_THICKNESS = 2
-    ANIMATION_MAX_LINE_THICKNESS = 13
-
-    def __init__(self, fps):
+    def __init__(self, fps, animation_duration_in_sec=1, animation_min_font_thickness=2, animation_max_font_thickness=9,
+                 animation_min_line_thickness=2, animation_max_line_thickness=13):
         self.fps = fps
-        self.animation_queue_size = int(fps * ResultsDrawer.ANIMATION_DURATION_IN_SEC)
+        self.old_reps = 0
+        self.old_fails = 0
+        self.animation_duration_in_sec = animation_duration_in_sec
+        self.animation_min_font_thickness = animation_min_font_thickness
+        self.animation_max_font_thickness = animation_max_font_thickness
+        self.animation_min_line_thickness = animation_min_line_thickness
+        self.animation_max_line_thickness = animation_max_line_thickness
+        self.animation_queue_size = int(fps * self.animation_duration_in_sec)
         self.pure_reps_font_animation_queue = deque(maxlen=self.animation_queue_size)
         self.impure_reps_font_animation_queue = deque(maxlen=self.animation_queue_size)
         self.pure_reps_line_animation_queue = deque(maxlen=self.animation_queue_size)
@@ -25,42 +25,42 @@ class ResultsDrawer:
         self.timer = Timer(self.fps)
 
     @staticmethod
-    def phase(frame, phase: PoseProcessor, x, y, side):
+    def draw_phase(frame, phase: PhaseDefiner, x, y, side):
+
         Drawer.print_message(frame, 'Phase:', x, y + side)
         x += 100
-        if phase.cur_state == 'hanging in the bottom position':
+        if phase.cur_state == 'beginning':
             Drawer.glyph_bottom_hanging(frame, x, y, side)
-        elif phase.cur_state == 'hanging in the top position':
+        elif phase.cur_state == 'chinning':
             Drawer.glyph_top_hanging(frame, x, y, side)
-        elif phase.cur_state == 'ascending':
+        elif phase.cur_state == 'pulling':
             Drawer.glyph_asc(frame, x, y, side)
-        elif phase.cur_state == 'descending':
+        elif phase.cur_state == 'lowering':
             Drawer.glyph_desc(frame, x, y, side)
         else:
             Drawer.glyph_undefined(frame, x + 10, y + 30)
 
-    # @staticmethod
-    # def misguided_attempt(frame, x, y):
-    #     Drawer.print_message(frame, 'Misguided attempt!.', x, y)
-
-    def repeats(self, frame, phase: PoseProcessor, x, y):
+    def print_repeats(self, frame, phase: PhaseDefiner, x, y):
         now_repeats = phase.pure_repeats
-        if ResultsDrawer.OLD_REPEATS != now_repeats:
-            self.generate_font_animation_queue(self.pure_reps_font_animation_queue, now_repeats,
-                                               ResultsDrawer.ANIMATION_MIN_FONT_THICKNESS,
-                                               ResultsDrawer.ANIMATION_MAX_FONT_THICKNESS, Drawer.RED_COLOR,
-                                               Drawer.WHITE_COLOR)
-            self.generate_line_animation_queue(self.pure_reps_line_animation_queue,
-                                               ResultsDrawer.ANIMATION_MIN_LINE_THICKNESS,
-                                               ResultsDrawer.ANIMATION_MAX_LINE_THICKNESS, Drawer.YELLOW_COLOR,
-                                               Drawer.GREEN_COLOR)
-            ResultsDrawer.OLD_REPEATS = now_repeats
+        if self.old_reps != now_repeats:
+            self.generate_animation(self.pure_reps_font_animation_queue, now_repeats, self.pure_reps_line_animation_queue)
+            self.old_reps = now_repeats
 
         Drawer.print_message(frame, 'Reps: ', x, y)
         if not self.pure_reps_font_animation_queue:
             Drawer.print_message_with_text_edging(frame, x + 100, y, f'{now_repeats}')
         else:
             self.draw_animation_from_queue(frame, self.pure_reps_font_animation_queue, x + 100, y)
+
+    def generate_animation(self, font_animation_queue, new_value, line_animation_queue):
+        self.generate_font_animation_queue(font_animation_queue, new_value,
+                                           self.animation_min_font_thickness,
+                                           self.animation_max_font_thickness, Drawer.RED_COLOR,
+                                           Drawer.WHITE_COLOR)
+        self.generate_line_animation_queue(line_animation_queue,
+                                           self.animation_min_line_thickness,
+                                           self.animation_max_line_thickness, Drawer.YELLOW_COLOR,
+                                           Drawer.GREEN_COLOR)
 
     def generate_font_animation_queue(self, animation_queue: deque, new_value, animation_min_font_thickness,
                                       animation_max_font_thickness, animation_initial_color,
@@ -117,18 +117,11 @@ class ResultsDrawer:
     def sub_color_step_from_color(color: tuple, color_step: tuple):
         return [sum([color_pair[0], -color_pair[1]]) for color_pair in zip(color, color_step)]
 
-    def fail(self, frame, phase: PoseProcessor, x, y):
+    def print_fails(self, frame, phase: PhaseDefiner, x, y):
         now_fails = phase.impure_repeats
-        if now_fails != ResultsDrawer.OLD_FAILS:
-            self.generate_font_animation_queue(self.impure_reps_font_animation_queue, now_fails,
-                                               ResultsDrawer.ANIMATION_MIN_FONT_THICKNESS,
-                                               ResultsDrawer.ANIMATION_MAX_FONT_THICKNESS, Drawer.RED_COLOR,
-                                               Drawer.ORANGE_COLOR)
-            self.generate_line_animation_queue(self.impure_reps_line_animation_queue,
-                                               ResultsDrawer.ANIMATION_MIN_LINE_THICKNESS,
-                                               ResultsDrawer.ANIMATION_MAX_LINE_THICKNESS, Drawer.YELLOW_COLOR,
-                                               Drawer.RED_COLOR)
-            ResultsDrawer.OLD_FAILS = now_fails
+        if now_fails != self.old_fails:
+            self.generate_animation(self.impure_reps_font_animation_queue, now_fails, self.impure_reps_line_animation_queue)
+            self.old_fails = now_fails
         Drawer.print_message(frame, f'Fails: ', x, y)
 
         if not self.impure_reps_font_animation_queue:
@@ -143,17 +136,17 @@ class ResultsDrawer:
         Drawer.print_message_with_text_edging(frame, x, y, draw_data[0], thickness=draw_data[1],
                                               text_color=draw_data[2])
 
-    def time(self, frame, phase, x, y):
+    def print_elapsed_time(self, frame, phase, x, y):
 
         self.timer.inc()
-        if ResultsDrawer.OLD_REPEATS == 0 and phase.cur_state in phase.states[0]:
+        if self.old_reps == 0 and phase.cur_state == phase.phases[0]:
             self.timer.reset()
 
         cur_time = self.timer.get_time()
         # save time in moment pull-up execution
-        if phase.cur_state in phase.states[2]:
+        if phase.cur_state in phase.phases[2]:
             self.timer.store_time()
-        if phase.cur_state in phase.states[4]:
+        if phase.cur_state in phase.phases[4]:
             cur_time = self.timer.get_stored_time()
         min, sec = int(cur_time / 60), int(cur_time % 60)
         Drawer.print_message(frame, f'Time: {min}:{sec:02}', x, y)
@@ -177,15 +170,16 @@ class ResultsDrawer:
         cv2.line(frame, points['LWrist'], points['RWrist'], color, thickness)
 
     @staticmethod
-    def draw_chin_point(frame, phase: PoseProcessor):
-        cv2.circle(frame, tuple(phase.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
+    def draw_chin_point(frame, phase: PhaseDefiner):
+        if phase.chin_point:
+            cv2.circle(frame, tuple(phase.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
 
-    def display_info(self, frame, phase: PoseProcessor):
+    def display_info(self, frame, phase: PhaseDefiner):
         new_frame = self.draw_info_region(frame)
-        self.repeats(new_frame, phase, 0, 30)
-        self.fail(new_frame, phase, 200, 30)
-        self.phase(new_frame, phase, 200, 45, 30)
-        self.time(new_frame, phase, 0, 75)
+        self.print_repeats(new_frame, phase, 0, 30)
+        self.print_fails(new_frame, phase, 200, 30)
+        self.draw_phase(new_frame, phase, 200, 45, 30)
+        self.print_elapsed_time(new_frame, phase, 0, 75)
         return new_frame
 
     @staticmethod

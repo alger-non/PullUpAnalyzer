@@ -1,4 +1,4 @@
-from PoseProcessor import PoseProcessor
+from PhaseDefiner import PhaseDefiner
 from VideoProcessor import VideoProcessor
 import cv2
 import os
@@ -28,7 +28,7 @@ class PullUpCounter:
             ['MidHip', 'LHip'], ['MidHip', 'RHip'], ['RHip', 'RKnee'], ['LHip', 'LKnee'], ['LKnee', 'LAnkle'],
             ['RKnee', 'RAnkle'])
 
-        self.pose_processor = PoseProcessor(30, 10, 5, 0.5)
+        self.pose_processor = PhaseDefiner(30, 30, 5, 0.5)
         self.video_processor = VideoProcessor(self.pose_processor, self.required_points, self.required_pairs)
         self.parse_cmd_line()
 
@@ -36,7 +36,7 @@ class PullUpCounter:
         parser = argparse.ArgumentParser()
         parser.add_argument('input_file', help='directory containing source video and json data directory')
         parser.add_argument('output_dir', help='directory in which will be saved the final video')
-        parser.add_argument('--use_raw_data', dest='use_raw_data', default=False,
+        parser.add_argument('--use-raw-data', dest='use_raw_data', default=False,
                             help='True or False depending on whether you have json-data in '
                                  'directory with the input video')
         args = parser.parse_args()
