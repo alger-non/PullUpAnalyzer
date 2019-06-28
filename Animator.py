@@ -38,49 +38,45 @@ class Animator:
     def generate_font_animation_queue(self, new_value, animation_queue: deque, animation_min_font_thickness,
                                       animation_max_font_thickness, animation_initial_color,
                                       animation_final_color):
-        font_thickness_step = (
-                                      animation_max_font_thickness - animation_min_font_thickness + 1) / self.animation_queue_size
-        font_thickness = animation_min_font_thickness
+
+            thicknesses = self.generate_thickness_range(animation_min_font_thickness, animation_max_font_thickness)
+            colors = self.generate_color_range(animation_initial_color, animation_final_color)
+            new_values = [new_value for i in range(self.animation_queue_size)]
+            for i in range(self.animation_queue_size):
+                animation_queue.append((new_values[i], thicknesses[i], colors[i]))
+
+    def generate_color_range(self, animation_initial_color, animation_final_color):
         color_step = self.define_bgr_color_step(animation_initial_color,
                                                 animation_final_color)
-        color = animation_initial_color
+        colors = [animation_initial_color]
+        size = self.animation_queue_size - 1
+        for i in range(size // 2):
+            colors.append(self.add_color_step_to_color(colors[-1], color_step))
+        for i in range(size - (size // 2)):
+            colors.append(self.sub_color_step_from_color(colors[-1], color_step))
 
-        for i in range(int(self.animation_queue_size / 2)):
-            font_thickness += font_thickness_step
-            color = self.add_color_step_to_color(color, color_step)
-            animation_queue.append((new_value, int(font_thickness), color))
+        return colors
 
-        for i in range(int(self.animation_queue_size / 2)):
-            font_thickness -= font_thickness_step
-            color = self.sub_color_step_from_color(color, color_step)
-            animation_queue.append((new_value, int(font_thickness), color))
+    def generate_thickness_range(self, animation_min_font_thickness, animation_max_font_thickness):
+        thickness_step = (animation_max_font_thickness - animation_min_font_thickness + 1) / self.animation_queue_size
+        thicknesses = [animation_min_font_thickness]
+        thickness = animation_min_font_thickness
+        size = self.animation_queue_size - 1
+        for i in range(size // 2):
+            thickness += thickness_step
+            thicknesses.append(int(thickness))
+        for i in range(size - (size // 2)):
+            thickness -= thickness_step
+            thicknesses.append(int(thickness))
+        return thicknesses
 
     def generate_line_animation_queue(self, line_animation_queue, animation_min_font_thickness,
                                       animation_max_font_thickness, animation_initial_color,
                                       animation_final_color):
-        line_thickness_step = (
-                                      animation_max_font_thickness - animation_min_font_thickness + 1) / self.animation_queue_size
-        line_thickness = animation_min_font_thickness
-        color_step = self.define_bgr_color_step(animation_initial_color,
-                                                animation_final_color)
-        color = animation_initial_color
-
-        for i in range(int(self.animation_queue_size / 2)):
-            line_thickness += line_thickness_step
-            color = self.add_color_step_to_color(color, color_step)
-            line_animation_queue.append((int(line_thickness), color))
-
-        for i in range(int(self.animation_queue_size / 2)):
-            line_thickness -= line_thickness_step
-            color = self.sub_color_step_from_color(color, color_step)
-            line_animation_queue.append((int(line_thickness), color))
-
-
-
-
-
-
-
+        thicknesses = self.generate_thickness_range(animation_min_font_thickness, animation_max_font_thickness)
+        colors = self.generate_color_range(animation_initial_color, animation_final_color)
+        for i in range(self.animation_queue_size):
+            line_animation_queue.append((thicknesses[i], colors[i]))
 
     def play_pull_up_line_animation(self, frame, point_a, point_b):
         thickness, color = None, None

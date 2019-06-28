@@ -42,12 +42,16 @@ class PullUpCounter:
 
         self.use_raw_data = args.use_raw_data
         self.input_file = args.input_file
+        if not os.path.isfile(self.input_file):
+            raise FileNotFoundError("Input file not found.")
         self.short_input_filename = os.path.basename(self.input_file).split('.')[0]
         if self.use_raw_data:
             self.json_dir = self.find_json_dir_by_video_name(args.input_file)
             if not self.json_dir:
-                raise FileNotFoundError("Json-dir not found in the video's specified directory")
+                raise FileNotFoundError("Json directory not found in the video's specified directory")
         self.output_dir = args.output_dir
+        if not os.path.isdir(self.output_dir):
+            raise FileNotFoundError("Output directory not found.")
 
     def find_json_dir_by_video_name(self, filename):
         par_dir = os.path.dirname(filename)
@@ -106,7 +110,7 @@ class PullUpCounter:
             self.video_writer.release()
 
 
-pulluper = PullUpCounter()
+pull_up_counter = PullUpCounter()
 t = time.time()
-pulluper.start()
+pull_up_counter.start()
 print(f'Execution time: {time.time() - t:.3} sec')
