@@ -4,6 +4,8 @@ import cv2
 
 
 class Animator:
+    """Class performing animation."""
+
     def __init__(self, animation_queue_size, animation_min_font_thickness, animation_max_font_thickness,
                  animation_min_line_thickness, animation_max_line_thickness):
         self.animation_queue_size = animation_queue_size
@@ -18,8 +20,9 @@ class Animator:
         self.animation_max_line_thickness = animation_max_line_thickness
 
     def generate_clean_pull_up_animation(self, new_value):
-        self.clean_reps_line_animation_queue = self.generate_animation(new_value, self.clean_reps_font_animation_queue, self.clean_reps_line_animation_queue,
-                                Drawer.GREEN_COLOR)
+        self.clean_reps_line_animation_queue = self.generate_animation(new_value, self.clean_reps_font_animation_queue,
+                                                                       self.clean_reps_line_animation_queue,
+                                                                       Drawer.GREEN_COLOR)
 
     def generate_unclean_pull_up_animation(self, new_value):
         self.generate_animation(new_value, self.unclean_reps_font_animation_queue,
@@ -39,11 +42,11 @@ class Animator:
                                       animation_max_font_thickness, animation_initial_color,
                                       animation_final_color):
 
-            thicknesses = self.generate_thickness_range(animation_min_font_thickness, animation_max_font_thickness)
-            colors = self.generate_color_range(animation_initial_color, animation_final_color)
-            new_values = [new_value for i in range(self.animation_queue_size)]
-            for i in range(self.animation_queue_size):
-                animation_queue.append((new_values[i], thicknesses[i], colors[i]))
+        thicknesses = self.generate_thickness_range(animation_min_font_thickness, animation_max_font_thickness)
+        colors = self.generate_color_range(animation_initial_color, animation_final_color)
+        new_values = [new_value for i in range(self.animation_queue_size)]
+        for i in range(self.animation_queue_size):
+            animation_queue.append((new_values[i], thicknesses[i], colors[i]))
 
     def generate_color_range(self, animation_initial_color, animation_final_color):
         color_step = self.define_bgr_color_step(animation_initial_color,
@@ -122,5 +125,3 @@ class Animator:
 
     def is_pull_up_line_animation_playing(self):
         return self.clean_reps_font_animation_queue or self.unclean_reps_line_animation_queue
-
-

@@ -6,7 +6,7 @@ from Animator import Animator
 
 
 class ResultsDrawer:
-
+    """Class drawing general information about pull up process."""
     def __init__(self, fps, animation_duration_in_sec=1, animation_min_font_thickness=2, animation_max_font_thickness=9,
                  animation_min_line_thickness=2, animation_max_line_thickness=13):
         self.old_reps = 0
@@ -18,23 +18,23 @@ class ResultsDrawer:
         self.timer = Timer(fps)
 
     @staticmethod
-    def draw_phase(frame, phase: PhaseQualifier, x, y, side):
+    def draw_phase(frame, phase_qualifier: PhaseQualifier, x, y, side):
 
         Drawer.print_message(frame, 'Phase:', x, y + side)
         x += 100
-        if phase.cur_state == 'beginning':
+        if phase_qualifier.cur_state == 'beginning':
             Drawer.glyph_bottom_hanging(frame, x, y, side)
-        elif phase.cur_state == 'chinning':
+        elif phase_qualifier.cur_state == 'chinning':
             Drawer.glyph_top_hanging(frame, x, y, side)
-        elif phase.cur_state == 'pulling':
+        elif phase_qualifier.cur_state == 'pulling':
             Drawer.glyph_asc(frame, x, y, side)
-        elif phase.cur_state == 'lowering':
+        elif phase_qualifier.cur_state == 'lowering':
             Drawer.glyph_desc(frame, x, y, side)
         else:
             Drawer.glyph_undefined(frame, x + 10, y + 30)
 
-    def print_repeats(self, frame, phase: PhaseQualifier, x, y):
-        now_repeats = phase.clean_repeats
+    def print_repeats(self, frame, phase_qualifier: PhaseQualifier, x, y):
+        now_repeats = phase_qualifier.clean_repeats
         if self.old_reps != now_repeats:
             self.animator.generate_clean_pull_up_animation(now_repeats)
             self.old_reps = now_repeats
@@ -45,8 +45,8 @@ class ResultsDrawer:
         else:
             self.animator.play_clean_pull_up_font_animation(frame, x + 100, y)
 
-    def print_fails(self, frame, phase: PhaseQualifier, x, y):
-        now_fails = phase.unclean_repeats
+    def print_fails(self, frame, phase_qualifier: PhaseQualifier, x, y):
+        now_fails = phase_qualifier.unclean_repeats
         if now_fails != self.old_fails:
             self.animator.generate_unclean_pull_up_animation(now_fails)
             self.old_fails = now_fails
@@ -58,16 +58,16 @@ class ResultsDrawer:
         else:
             self.animator.play_unclean_pull_up_font_animation(frame, x + 100, y)
 
-    def print_elapsed_time(self, frame, phase, x, y):
+    def print_elapsed_time(self, frame, phase_qualifier, x, y):
         self.timer.inc()
-        if self.old_reps == 0 and phase.cur_state == phase.phases[0]:
+        if self.old_reps == 0 and phase_qualifier.cur_state == phase_qualifier.phases[0]:
             self.timer.reset()
 
         cur_time = self.timer.get_time()
         # save time in moment pull-up execution
-        if phase.cur_state in phase.phases[2]:
+        if phase_qualifier.cur_state in phase_qualifier.phases[2]:
             self.timer.store_time()
-        if phase.cur_state in phase.phases[4]:
+        if phase_qualifier.cur_state in phase_qualifier.phases[4]:
             cur_time = self.timer.get_stored_time()
         mins, secs = int(cur_time / 60), int(cur_time % 60)
         Drawer.print_message(frame, f'Time: {mins}:{secs:02}', x, y)
@@ -82,22 +82,24 @@ class ResultsDrawer:
 
     def draw_line_between_wrists(self, frame, points):
         l_wrist, r_wrist = points['LWrist'], points['RWrist']
+        if not (l_wrist and r_wrist):
+            return
         if self.animator.is_pull_up_line_animation_playing():
             self.animator.play_pull_up_line_animation(frame, l_wrist, r_wrist)
         else:
             cv2.line(frame, l_wrist, r_wrist, Drawer.DEFAULT_COLOR, Drawer.DEFAULT_LINE_THICKNESS)
 
     @staticmethod
-    def draw_chin_point(frame, phase: PhaseQualifier):
-        if phase.chin_point:
-            cv2.circle(frame, tuple(phase.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
+    def draw_chin_point(frame, phase_qualifier: PhaseQualifier):
+        if phase_qualifier.chin_point:
+            cv2.circle(frame, tuple(phase_qualifier.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
 
-    def display_info(self, frame, phase: PhaseQualifier):
+    def display_info(self, frame, phase_qualifier: PhaseQualifier):
         new_frame = self.draw_info_region(frame)
-        self.print_repeats(new_frame, phase, 0, 30)
-        self.print_fails(new_frame, phase, 200, 30)
-        self.draw_phase(new_frame, phase, 200, 45, 30)
-        self.print_elapsed_time(new_frame, phase, 0, 75)
+        self.print_repeats(new_frame, phase_qualifier, 0, 30)
+        self.print_fails(new_frame, phase_qualifier, 200, 30)
+        self.draw_phase(new_frame, phase_qualifier, 200, 45, 30)
+        self.print_elapsed_time(new_frame, phase_qualifier, 0, 75)
         return new_frame
 
     @staticmethod

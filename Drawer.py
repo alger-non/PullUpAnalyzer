@@ -1,6 +1,8 @@
 import cv2
 
+
 class Drawer:
+    """Class for drawing performing simple tasks."""
     YELLOW_COLOR = (0, 255, 255)
     RED_COLOR = (0, 0, 255)
     BLUE_COLOR = (255, 0, 0)
@@ -9,6 +11,7 @@ class Drawer:
     WHITE_COLOR = (255, 255, 255)
     ORANGE_COLOR = (16, 108, 168)
     DARK_RED_COLOR = (1, 1, 75)
+    PURPLE_COLOR = (120, 5, 120)
 
     DEFAULT_FONT_THICKNESS = 2
     DEFAULT_LINE_THICKNESS = 3
@@ -30,9 +33,9 @@ class Drawer:
                 Drawer.draw_point(frame, points[part_a], circle_color, radius)
                 Drawer.draw_point(frame, points[part_b], circle_color, radius)
 
-
     @staticmethod
-    def draw_numbered_joints(frame, points: dict, needed_points: dict, text_color=RED_COLOR, thickness=DEFAULT_FONT_THICKNESS, font_scale=1):
+    def draw_numbered_joints(frame, points: dict, needed_points: dict, text_color=RED_COLOR,
+                             thickness=DEFAULT_FONT_THICKNESS, font_scale=1):
         for joint, point in points.items():
             if not point:
                 break
@@ -65,13 +68,13 @@ class Drawer:
     # Draws glyph in rectangle with side=a and a top left corner = (x,y)
     @staticmethod
     def glyph_asc(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
-        Drawer.down_arrow(frame, x, y, a, line_color, line_thickness)
-        Drawer.down_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
+        Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
+        Drawer.up_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
 
     @staticmethod
     def glyph_desc(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
-        Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
-        Drawer.up_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
+        Drawer.down_arrow(frame, x, y, a, line_color, line_thickness)
+        Drawer.down_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
 
     @staticmethod
     def glyph_bottom_hanging(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
@@ -87,7 +90,9 @@ class Drawer:
                     lineType=cv2.LINE_AA)
 
     @staticmethod
-    def print_message_with_text_edging(frame, x, y, value, border_size=5, thickness=DEFAULT_FONT_THICKNESS, text_color=RED_COLOR, border_color=DEFAULT_COLOR):
-        Drawer.print_message(frame, f'{value}', x, y, text_color=border_color,  thickness=thickness + border_size, font_scale=1.1)
+    def print_message_with_text_edging(frame, x, y, value, border_size=5, thickness=DEFAULT_FONT_THICKNESS,
+                                       text_color=RED_COLOR, border_color=DEFAULT_COLOR):
+        Drawer.print_message(frame, f'{value}', x, y, text_color=border_color, thickness=thickness + border_size,
+                             font_scale=1.1)
         Drawer.print_message(frame, f'{value}', x, y, thickness=thickness, text_color=text_color,
                              font_scale=1.1)

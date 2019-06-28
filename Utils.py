@@ -32,9 +32,12 @@ def extract_required_json_points(points_list, needed_points: dict):
     for joint, joint_number in needed_points.items():
         position = 3 * joint_number
         x, y = (int(points_list[position]), int(points_list[position + 1]))
+        if 0 < x < 10 and 0 < y < 10:
+            print(x, y)
         if (x, y) == (0, 0):
             points[joint] = None
         else:
+
             points[joint] = (x, y)
     return points
 
