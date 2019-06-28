@@ -4,21 +4,19 @@ import os
 import json
 from ResultsDrawer import ResultsDrawer
 from os import walk
-from openpose import pyopenpose as op
-from Drawer import Drawer
 from PhaseQualifier import PhaseQualifier
 
 
 class VideoProcessor:
     """Class to handle input video."""
+
     def __init__(self, phase_definer: PhaseQualifier, required_points, required_pairs):
         self.phase_definer = phase_definer
         self.required_points = required_points
         self.required_pairs = required_pairs
         self._drawer = None
 
-
-    def process_video_with_net(self, cap: cv2.VideoCapture, op_wrapper: op.WrapperPython):
+    def process_video_with_net(self, cap: cv2.VideoCapture, op_wrapper):
         """Create generator returning processed frames using only input video.
 
         :param cap: initialized video-capture instance to read frames from video
@@ -94,7 +92,3 @@ class VideoProcessor:
         self._drawer.draw_line_between_wrists(new_frame, points)
         self._drawer.draw_chin_point(new_frame, self.phase_definer)
         return new_frame
-
-
-
-

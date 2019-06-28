@@ -3,7 +3,6 @@ from VideoProcessor import VideoProcessor
 import cv2
 import os
 import argparse
-from openpose import pyopenpose as op
 import time
 
 
@@ -52,9 +51,7 @@ class PullUpCounter:
 
     def find_json_dir_by_video_name(self, filename):
         par_dir = os.path.dirname(filename)
-        print(self.short_input_filename)
         possible_json_dir = f'{os.path.join(par_dir, self.short_input_filename)}_json'
-        print(possible_json_dir)
         return possible_json_dir if os.path.isdir(possible_json_dir) else None
 
     def start(self):
@@ -72,6 +69,7 @@ class PullUpCounter:
             self.exec()
 
     def exec(self):
+        from openpose import pyopenpose as op
         params = dict()
         params["model_folder"] = "models/"
         params['number_people_max'] = 1

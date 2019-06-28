@@ -10,12 +10,16 @@ class Drawer:
     ORANGE_COLOR = (16, 108, 168)
     DARK_RED_COLOR = (1, 1, 75)
 
+    DEFAULT_FONT_THICKNESS = 2
+    DEFAULT_LINE_THICKNESS = 3
+    DEFAULT_COLOR = YELLOW_COLOR
+
     def __init__(self):
         pass
 
     @staticmethod
-    def draw_skeleton(frame, points, pose_pairs, line_color=YELLOW_COLOR, circle_color=RED_COLOR, radius=8,
-                      line_thickness=3):
+    def draw_skeleton(frame, points, pose_pairs, line_color=DEFAULT_COLOR, circle_color=RED_COLOR, radius=8,
+                      line_thickness=DEFAULT_LINE_THICKNESS):
 
         for pair in pose_pairs:
             part_a = pair[0]
@@ -28,7 +32,7 @@ class Drawer:
 
 
     @staticmethod
-    def draw_numbered_joints(frame, points: dict, needed_points: dict, text_color=RED_COLOR, thickness=2, font_scale=1):
+    def draw_numbered_joints(frame, points: dict, needed_points: dict, text_color=RED_COLOR, thickness=DEFAULT_FONT_THICKNESS, font_scale=1):
         for joint, point in points.items():
             if not point:
                 break
@@ -38,7 +42,7 @@ class Drawer:
                         lineType=cv2.LINE_AA)
 
     @staticmethod
-    def print_message(frame, message, x, y, text_color=RED_COLOR, thickness=2, font_scale=1):
+    def print_message(frame, message, x, y, text_color=RED_COLOR, thickness=DEFAULT_FONT_THICKNESS, font_scale=1):
         cv2.putText(frame, message, (x, y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color, thickness,
                     lineType=cv2.LINE_AA)
 
@@ -78,17 +82,12 @@ class Drawer:
         Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
 
     @staticmethod
-    def glyph_undefined(frame, x, y, text_color=RED_COLOR, thickness=2, font_scale=1):
+    def glyph_undefined(frame, x, y, text_color=RED_COLOR, thickness=DEFAULT_FONT_THICKNESS, font_scale=1):
         cv2.putText(frame, '??', (x, y,), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color, thickness,
                     lineType=cv2.LINE_AA)
 
-    # @staticmethod
-    # def glyph_cross(frame, x, y, line_color=RED_COLOR, thickness=2):
-    #     cv2.line(frame,(0,0), (x,y),line_color,thickness)
-    #     cv2.line(frame, (0,x), (x,0), line_color, thickness)
-
     @staticmethod
-    def print_message_with_text_edging(frame, x, y, value, border_size=5, thickness=2, text_color=RED_COLOR, border_color=YELLOW_COLOR):
+    def print_message_with_text_edging(frame, x, y, value, border_size=5, thickness=DEFAULT_FONT_THICKNESS, text_color=RED_COLOR, border_color=DEFAULT_COLOR):
         Drawer.print_message(frame, f'{value}', x, y, text_color=border_color,  thickness=thickness + border_size, font_scale=1.1)
         Drawer.print_message(frame, f'{value}', x, y, thickness=thickness, text_color=text_color,
                              font_scale=1.1)
