@@ -1,5 +1,5 @@
 from Timer import Timer
-from PhaseDefiner import PhaseDefiner
+from PhaseQualifier import PhaseQualifier
 from Drawer import Drawer
 from collections import deque
 import cv2
@@ -25,7 +25,7 @@ class ResultsDrawer:
         self.timer = Timer(self.fps)
 
     @staticmethod
-    def draw_phase(frame, phase: PhaseDefiner, x, y, side):
+    def draw_phase(frame, phase: PhaseQualifier, x, y, side):
 
         Drawer.print_message(frame, 'Phase:', x, y + side)
         x += 100
@@ -40,8 +40,8 @@ class ResultsDrawer:
         else:
             Drawer.glyph_undefined(frame, x + 10, y + 30)
 
-    def print_repeats(self, frame, phase: PhaseDefiner, x, y):
-        now_repeats = phase.pure_repeats
+    def print_repeats(self, frame, phase: PhaseQualifier, x, y):
+        now_repeats = phase.clean_repeats
         if self.old_reps != now_repeats:
             self.generate_animation(self.pure_reps_font_animation_queue, now_repeats, self.pure_reps_line_animation_queue)
             self.old_reps = now_repeats
@@ -117,8 +117,8 @@ class ResultsDrawer:
     def sub_color_step_from_color(color: tuple, color_step: tuple):
         return [sum([color_pair[0], -color_pair[1]]) for color_pair in zip(color, color_step)]
 
-    def print_fails(self, frame, phase: PhaseDefiner, x, y):
-        now_fails = phase.impure_repeats
+    def print_fails(self, frame, phase: PhaseQualifier, x, y):
+        now_fails = phase.unclean_repeats
         if now_fails != self.old_fails:
             self.generate_animation(self.impure_reps_font_animation_queue, now_fails, self.impure_reps_line_animation_queue)
             self.old_fails = now_fails
@@ -170,11 +170,11 @@ class ResultsDrawer:
         cv2.line(frame, points['LWrist'], points['RWrist'], color, thickness)
 
     @staticmethod
-    def draw_chin_point(frame, phase: PhaseDefiner):
+    def draw_chin_point(frame, phase: PhaseQualifier):
         if phase.chin_point:
             cv2.circle(frame, tuple(phase.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
 
-    def display_info(self, frame, phase: PhaseDefiner):
+    def display_info(self, frame, phase: PhaseQualifier):
         new_frame = self.draw_info_region(frame)
         self.print_repeats(new_frame, phase, 0, 30)
         self.print_fails(new_frame, phase, 200, 30)

@@ -3,8 +3,8 @@ import math
 from collections import deque
 
 
-class PhaseDefiner:
-    """Class processing key points to define pulluper state."""
+class PhaseQualifier:
+    """Class processing key points to define athlete's state."""
 
     def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
                  neck_chin_top_of_head_ratio, chin_to_wrists_raise_ratio_to_start_attempt=0.7,
@@ -16,33 +16,30 @@ class PhaseDefiner:
         self.arm_angle_threshold = arm_angle_threshold
         self.leg_angle_threshold = leg_angle_threshold
         self.wrists_level_angle_threshold = wrists_level_angle_threshold
-        self.phases = ('beginning', 'pulling', 'chinning', 'lowering', 'unknown')
+        self._phases = ('beginning', 'pulling', 'chinning', 'lowering', 'unknown')
         self._cur_phase = 'unknown'
-        self._pure_repeats = 0
-        self._impure_repeats = 0
+        self._clean_repeats = 0
+        self._unclean_repeats = 0
         self._failed_phase_define_attempts = 0
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
-        self.process_phase = {self.phases[0]: self.process_beginning,
-                              self.phases[1]: self.process_pulling,
-                              self.phases[2]: self.process_chinning,
-                              self.phases[3]: self.process_lowering,
-                              self.phases[4]: self.process_unknown_state}
-
+        self._process_phase = {self._phases[0]: self.process_beginning,
+                               self._phases[1]: self.process_pulling,
+                               self._phases[2]: self.process_chinning,
+                               self._phases[3]: self.process_lowering,
+                               self._phases[4]: self.process_unknown_state}
         self._chin_point = []
         self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
-        self._boundary_distance_between_chin_and_wrist_to_start_attempt = None
-        self._boundary_distance_between_chin_and_wrist_to_finish_attempt = None
+        self._distance_between_chin_and_wrist_to_start_attempt = None
+        self._distance_between_chin_and_wrist_to_finish_attempt = None
         self.chin_to_wrists_raise_ratio_to_start_attempt = chin_to_wrists_raise_ratio_to_start_attempt
         self.chin_to_wrists_raise_ratio_to_finish_attempt = chin_to_wrists_raise_ration_to_finish_attempt
         self._pull_up_attempt_flag = False
-
         self.false_pull_up_check_queue_history = false_pull_up_check_queue_history
-        self.last_wrist_y_deviations = deque(maxlen=self.false_pull_up_check_queue_history)
-        self.last_shoulder_y_deviations = deque(maxlen=self.false_pull_up_check_queue_history)
+        self._last_wrist_y_deviations = deque(maxlen=self.false_pull_up_check_queue_history)
+        self._last_shoulder_y_deviations = deque(maxlen=self.false_pull_up_check_queue_history)
         self._prev_shoulders_y = None
         self._prev_wrists_y = None
-
-        self.angle_between_legs = None
+        self._angle_between_legs = None
 
     def get_wrists_level_angle(self):
         return self._cur_wrists_level_angle
@@ -62,14 +59,17 @@ class PhaseDefiner:
     def get_cur_state(self):
         return self._cur_phase
 
-    def get_pure_repeats(self):
-        return self._pure_repeats
+    def get_clean_repeats(self):
+        return self._clean_repeats
 
-    def get_impure_repeats(self):
-        return self._impure_repeats
+    def get_unclean_repeats(self):
+        return self._unclean_repeats
 
     def get_chin_point(self):
         return self._chin_point
+
+    def get_phases(self):
+        return self._phases
 
     wrists_level_angle = property(get_wrists_level_angle)
     left_arm_angle = property(get_left_arm_angle)
@@ -77,9 +77,10 @@ class PhaseDefiner:
     left_leg_angle = property(get_left_leg_angle)
     right_leg_angle = property(get_right_leg_angle)
     cur_state = property(get_cur_state)
-    pure_repeats = property(get_pure_repeats)
-    impure_repeats = property(get_impure_repeats)
+    clean_repeats = property(get_clean_repeats)
+    unclean_repeats = property(get_unclean_repeats)
     chin_point = property(get_chin_point)
+    phases = property(get_phases)
 
     def zero_failed_phase_define_attempts(self):
         self._failed_phase_define_attempts = 0
@@ -89,17 +90,27 @@ class PhaseDefiner:
 
     def check_failed_state_detection_attempts_amount(self):
         if self._failed_phase_define_attempts > self.failed_attempts_amount_threshold:
-            self._cur_phase = self.phases[4]
+            self._cur_phase = self._phases[4]
 
     def process_beginning(self, points):
+        """Handle the initial pull up phase.
+
+        In this phase we wait for the next phase viz. a pulling phase.
+        Transition to this phase we define by angle decreasing in athlete's arms.
+        """
         arms_are_straight = self.are_arms_straight(points)
         if not arms_are_straight:
-            self._cur_phase = self.phases[1]
+            self._cur_phase = self._phases[1]
 
     def process_chinning(self, points):
+        """Handle the chinning pull up phase.
+
+        In this phase we wait for the next phase viz. a lowering phase.
+        Transition to this phase we define by chin position under the bar (actually under the wrists level).
+        """
         neck_is_over_wrists_level = self.is_chin_over_wrists_level(points)
         if not neck_is_over_wrists_level:
-            self._cur_phase = self.phases[3]
+            self._cur_phase = self._phases[3]
 
     def process_unknown_state(self, points):
         """Handle the state that does not fit under any of the states specified by us.
@@ -109,16 +120,15 @@ class PhaseDefiner:
         """
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
-            self._cur_phase = self.phases[0]
+            self._cur_phase = self._phases[0]
             self.reset_deviations_calculation()
-            self.define_attempt_positions(points)
+            self.calculate_attempt_positions(points)
 
     def reset_deviations_calculation(self):
-        self.last_shoulder_y_deviations.clear()
-        self.last_wrist_y_deviations.clear()
+        self._last_shoulder_y_deviations.clear()
+        self._last_wrist_y_deviations.clear()
         self._prev_wrists_y = None
         self._prev_shoulders_y = None
-
 
     @staticmethod
     def find_distance_between_wrists_and_shoulders(points):
@@ -130,19 +140,26 @@ class PhaseDefiner:
         avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
         return None if not self.chin_point else self.chin_point[1] - avg_wrists_y
 
-    def define_attempt_positions(self, points):
-        """Define start and final positions of pulling up attempt.
+    def calculate_attempt_positions(self, points):
+        """Calculate start and final positions of pulling up attempt.
 
-        To count impure reps we have to define position from which we start to count impure rep
-        and position where we
-
+        To count unclean reps we have to define position from which we start to count unclean repetition
+        and position in which we consider this repetition as done.
+        So we find distance between wrists and chin (since we're in the initial phase that's maximum
+        possible distance between these points) and multiply it by our chin-to-wrists-raise-ratio-to-start-attempt
+        and chin-to-wrists-raise-ration-to-finish-attempt COEFFs.
         """
         distance_between_wrists_and_chin = self.find_distance_between_wrists_and_chin(points)
+
         if not distance_between_wrists_and_chin:
+            # if distance wasn't found we set our threshold distances in infinity to
+            # prevent unclean pull ups attempt counting while comparing them with current wrists-chin distances
+            self._distance_between_chin_and_wrist_to_start_attempt = math.inf
+            self._distance_between_chin_and_wrist_to_finish_attempt = math.inf
             return
-        self._boundary_distance_between_chin_and_wrist_to_start_attempt = distance_between_wrists_and_chin * (
+        self._distance_between_chin_and_wrist_to_start_attempt = distance_between_wrists_and_chin * (
                 1 - self.chin_to_wrists_raise_ratio_to_start_attempt)
-        self._boundary_distance_between_chin_and_wrist_to_finish_attempt = distance_between_wrists_and_chin * (
+        self._distance_between_chin_and_wrist_to_finish_attempt = distance_between_wrists_and_chin * (
                 1 - self.chin_to_wrists_raise_ratio_to_finish_attempt)
 
     def is_there_initial_position(self, points):
@@ -154,9 +171,6 @@ class PhaseDefiner:
 
         NOTE: these conditions not enough to determine the hang exactly
         but they work in "most" cases.
-
-        :param points: person key points
-        :return: is there a hang in the bottom position
         """
         arms_are_straight = self.are_arms_straight(points)
         wrists_are_over_body = self.are_wrists_over_body(points)
@@ -170,87 +184,107 @@ class PhaseDefiner:
         If legs weren't found we imply that legs are together otherwise
         we'd have "unknown state" every time when athlete's legs are out of the frame.
         """
-        self.angle_between_legs = -math.inf
+        self._angle_between_legs = -math.inf
         if points['LHip'] and points['LKnee'] and points['RHip'] and points['RKnee']:
-            self.angle_between_legs = Utils.get_angle_between_vectors(
+            self._angle_between_legs = Utils.get_angle_between_vectors(
                 Utils.get_vector_from_points(points['LHip'], points['LKnee']),
                 Utils.get_vector_from_points(points['RHip'], points['RKnee']))
 
-        return self.angle_between_legs <= self.leg_angle_threshold
+        return self._angle_between_legs <= self.leg_angle_threshold
 
-    def inc_pure_repeats_amount(self):
-        self._pure_repeats += 1
+    def inc_clean_repeats_amount(self):
+        self._clean_repeats += 1
         self.reset_attempt()
 
-    def inc_impure_repeats_amount(self):
-        self._impure_repeats += 1
+    def inc_unclean_repeats_amount(self):
+        self._unclean_repeats += 1
         self.reset_attempt()
 
     def reset_attempt(self):
         self._pull_up_attempt_flag = False
 
+    def shoulders_deviation_are_greater_than_wrists_one(self):
+        wrists_deviations_sum = sum(self._last_wrist_y_deviations)
+        shoulders_deviations_sum = sum(self._last_shoulder_y_deviations)
+        return shoulders_deviations_sum > wrists_deviations_sum
+
     def process_pulling(self, points):
-        chin_is_over_wrists_level = self.is_chin_over_wrists_level(points)
+        """Handle the pulling phase.
 
-        self.update_wrist_y_deviations(points)
-        self.update_shoulder_y_deviations(points)
-        self.check_impure_pull_up(points)
+        From this phase we can pass to the next chinning phase or back to the previous initial position.
+        Next phase we determine by chin position above the wrists level.
+        To avoid false pull ups when an athlete imitate a pull up standing on the ground
+        instead of executing real one, we calculate vertical distance overcome by wrists and by shoulders in the frames
+        amount of which is defined by our false-pull-up-check-queue-history COEFF.
+        And in moment possible pull up we compare these distance and count pull up if the distance overcome by
+        shoulders is greater than the distance overcome by wrists
+        (in real pull up there's a shoulders movement not a wrists one).
 
-        if chin_is_over_wrists_level:
-            wrists_deviations_sum = sum(self.last_wrist_y_deviations)
-            shoulders_deviations_sum = sum(self.last_shoulder_y_deviations)
+        If we don't qualify any of the possible phases we check possibility of unclean pull up.
 
-            if shoulders_deviations_sum > wrists_deviations_sum:
-                self.inc_pure_repeats_amount()
-                self._cur_phase = self.phases[2]
+        Note: we don't compare the chin position with the bar since we only operate with
+        athlete's body key points, so it will be inaccurate a bit.
+        """
+        self.update_wrists_y_deviations(points)
+        self.update_shoulders_y_deviations(points)
+        if self.is_chin_over_wrists_level(points):
+            if self.shoulders_deviation_are_greater_than_wrists_one():
+                self.inc_clean_repeats_amount()
+                self._cur_phase = self._phases[2]
 
         elif self.is_there_initial_position(points):
-            self._cur_phase = self.phases[0]
+            self._cur_phase = self._phases[0]
+        else:
+            self.define_unclean_pull_up_state(points)
 
-    def check_impure_pull_up(self, points):
+    def reset_pull_up_attempt(self):
+        self._pull_up_attempt_flag = False
+
+    def define_unclean_pull_up_state(self, points):
+        """Define unclean pull up state.
+
+        If current wrists-chin distance less than our distance-between-chin-and-wrist-to-start-attempt we consider
+        this repetition as an pull up attempt.
+        If current wrists-chin distance greater than our distance-between-chin-and-wrist-to-finish-attempt we increase
+        unclean pull ups counter.
+        """
         if not self.chin_point:
             return
         cur_distance_between_chin_and_wrists = self.find_distance_between_wrists_and_chin(points)
 
-        # print(cur_distance_between_chin_and_wrists, self._boundary_distance_between_chin_and_wrist)
         if not self._pull_up_attempt_flag:
-            self._pull_up_attempt_flag = True if cur_distance_between_chin_and_wrists <= self._boundary_distance_between_chin_and_wrist_to_start_attempt else False
+            self._pull_up_attempt_flag = cur_distance_between_chin_and_wrists <= self._distance_between_chin_and_wrist_to_start_attempt
         else:
-            impure_pull_up_is_done = True if cur_distance_between_chin_and_wrists > self._boundary_distance_between_chin_and_wrist_to_finish_attempt else False
-            if impure_pull_up_is_done:
-                self.inc_impure_repeats_amount()
-                self._cur_phase = self.phases[2]
-                self._pull_up_attempt_flag = False
+            unclean_pull_up_is_done = cur_distance_between_chin_and_wrists > self._distance_between_chin_and_wrist_to_finish_attempt
+            if unclean_pull_up_is_done and self.shoulders_deviation_are_greater_than_wrists_one():
+                self.inc_unclean_repeats_amount()
+                # pass to lowering phase
+                self._cur_phase = self._phases[3]
+                self.reset_pull_up_attempt()
 
-    def update_wrist_y_deviations(self, points):
-        cur_avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
+    def update_wrists_y_deviations(self, points):
+        """Add current wrists y deviation to wrists y deviations queue."""
+        cur_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
+        if self._prev_wrists_y:
+            cur_wrists_y_deviation = abs(self._prev_wrists_y - cur_wrists_y)
+            self._last_wrist_y_deviations.append(cur_wrists_y_deviation)
+        self._prev_wrists_y = cur_wrists_y
 
-        if not self._prev_wrists_y:
-            self._prev_wrists_y = cur_avg_wrists_y
-            return
-
-        cur_wrists_y_deviation = abs(self._prev_wrists_y - cur_avg_wrists_y)
-
-        self.last_wrist_y_deviations.append(cur_wrists_y_deviation)
-        self._prev_wrists_y = cur_avg_wrists_y
-
-
-    def update_shoulder_y_deviations(self, points):
-        cur_avg_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
-        if not self._prev_shoulders_y:
-            self._prev_shoulders_y = cur_avg_shoulders_y
-            return
-
-        cur_shoulders_y_deviation = abs(self._prev_shoulders_y - cur_avg_shoulders_y)
-
-        self.last_shoulder_y_deviations.append(cur_shoulders_y_deviation)
-        self._prev_shoulders_y = cur_avg_shoulders_y
-
+    def update_shoulders_y_deviations(self, points):
+        """Add current shoulders y deviation to shoulders y deviations queue."""
+        cur_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
+        if self._prev_shoulders_y:
+            cur_shoulders_y_deviation = abs(self._prev_shoulders_y - cur_shoulders_y)
+            self._last_shoulder_y_deviations.append(cur_shoulders_y_deviation)
+        self._prev_shoulders_y = cur_shoulders_y
 
     def process_lowering(self, points):
-        there_is_initial_position = self.is_there_initial_position(points)
-        if there_is_initial_position:
-            self._cur_phase = self.phases[0]
+        """Handle the lowering pull up phase.
+
+        In this phase we wait for the next phase viz. an initial phase.
+        """
+        if self.is_there_initial_position(points):
+            self._cur_phase = self._phases[0]
 
     def is_there_hang(self, points):
         """Define whether is there a hang on the bar.
@@ -288,12 +322,6 @@ class PhaseDefiner:
         return left_wrist_y < left_elbow_y and right_wrist_y < right_elbow_y
 
     @staticmethod
-    def get_angle_between_three_points(point_a, point_b, point_c):
-        return Utils.get_angle_between_vectors(
-            Utils.get_vector_from_points(point_a, point_b),
-            Utils.get_vector_from_points(point_b, point_c))
-
-    @staticmethod
     def are_wrists_over_body(points):
         """Define whether wrists are higher than all other body parts.
 
@@ -317,17 +345,14 @@ class PhaseDefiner:
 
          We find the angle in each arm between next points: shoulder - elbow - writs and
          then compare the angle with our arm-angle-threshold COEFF.
-
-        :param points: person key points
-        :return: are arms straight
         """
         self._cur_left_arm_angle, self._cur_right_arm_angle = math.inf, math.inf
         if points['LWrist'] and points['LElbow'] and points['LShoulder']:
-            self._cur_left_arm_angle = self.get_angle_between_three_points(points['LWrist'], points['LElbow'],
+            self._cur_left_arm_angle = Utils.get_angle_between_three_points(points['LWrist'], points['LElbow'],
                                                                            points['LShoulder'])
 
         if points['RWrist'] and points['RElbow'] and points['RShoulder']:
-            self._cur_right_arm_angle = self.get_angle_between_three_points(points['RWrist'], points['RElbow'],
+            self._cur_right_arm_angle = Utils.get_angle_between_three_points(points['RWrist'], points['RElbow'],
                                                                             points['RShoulder'])
 
         return self._cur_left_arm_angle < self.arm_angle_threshold and self._cur_right_arm_angle < self.arm_angle_threshold
@@ -337,9 +362,6 @@ class PhaseDefiner:
 
         To determine whether wrists are on the same level we define the angle of deviation of one wrist
         relative to another vertically and compare this angle with our wrists-level-angle_threshold COEFF.
-
-        :param points: person key points
-        :return: are wrists on the same level
         """
         if not (points['LWrist'] and points['RWrist']):
             return False
@@ -366,7 +388,7 @@ class PhaseDefiner:
         self.define_chin_point(points)
         if self.is_there_hang(points):
             self.zero_failed_phase_define_attempts()
-            self.process_phase[self._cur_phase](points)
+            self._process_phase[self._cur_phase](points)
             return True
         else:
             self.inc_failed_phase_define_attempts()

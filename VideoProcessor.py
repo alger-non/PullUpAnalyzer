@@ -6,12 +6,12 @@ from ResultsDrawer import ResultsDrawer
 from os import walk
 from openpose import pyopenpose as op
 from Drawer import Drawer
-from PhaseDefiner import PhaseDefiner
+from PhaseQualifier import PhaseQualifier
 
 
 class VideoProcessor:
     """Class to handle input video."""
-    def __init__(self, phase_definer: PhaseDefiner, required_points, required_pairs):
+    def __init__(self, phase_definer: PhaseQualifier, required_points, required_pairs):
         self.phase_definer = phase_definer
         self.required_points = required_points
         self.required_pairs = required_pairs

@@ -1,4 +1,4 @@
-from PhaseDefiner import PhaseDefiner
+from PhaseQualifier import PhaseQualifier
 from VideoProcessor import VideoProcessor
 import cv2
 import os
@@ -28,7 +28,7 @@ class PullUpCounter:
             ['MidHip', 'LHip'], ['MidHip', 'RHip'], ['RHip', 'RKnee'], ['LHip', 'LKnee'], ['LKnee', 'LAnkle'],
             ['RKnee', 'RAnkle'])
 
-        self.pose_processor = PhaseDefiner(30, 30, 5, 0.5)
+        self.pose_processor = PhaseQualifier(30, 30, 5, 0.5)
         self.video_processor = VideoProcessor(self.pose_processor, self.required_points, self.required_pairs)
         self.parse_cmd_line()
 
