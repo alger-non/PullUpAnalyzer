@@ -4,7 +4,7 @@ from collections import deque
 
 
 class PhaseQualifier:
-    """Class processing key points to define athlete's state."""
+    """Class processing key points to identify athlete state."""
 
     def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
                  neck_chin_top_of_head_ratio, chin_to_wrists_raise_ratio_to_start_attempt=0.7,
@@ -95,8 +95,8 @@ class PhaseQualifier:
     def process_beginning(self, points):
         """Handle the initial pull up phase.
 
-        In this phase we wait for the next phase viz. a pulling phase.
-        Transition to this phase we define by angle decreasing in athlete's arms.
+        At this stage we are waiting for the next phase viz. a pulling phase.
+        Transition to this phase we define by the angle decreasing in athlete's arms.
         """
         arms_are_straight = self.are_arms_straight(points)
         if not arms_are_straight:
@@ -105,8 +105,8 @@ class PhaseQualifier:
     def process_chinning(self, points):
         """Handle the chinning pull up phase.
 
-        In this phase we wait for the next phase viz. a lowering phase.
-        Transition to this phase we define by chin position under the bar (actually under the wrists level).
+        At this stage we are waiting for the next phase viz. a lowering phase.
+        Transition to this phase we define by the chin position under the bar (actually under the wrists level).
         """
         neck_is_over_wrists_level = self.is_chin_over_wrists_level(points)
         if not neck_is_over_wrists_level:
@@ -115,7 +115,7 @@ class PhaseQualifier:
     def process_unknown_state(self, points):
         """Handle the state that does not fit under any of the states specified by us.
 
-        If the state is unknown then we just wait for initial phase of pull up - hanging in the bottom position
+        If the state is unknown then we just are waiting for the initial phase of pull up - hanging in the bottom position
         on the straight arms. And if it is then we move to the next phase.
         """
         there_is_initial_position = self.is_there_initial_position(points)
@@ -141,18 +141,18 @@ class PhaseQualifier:
         return None if not self.chin_point else self.chin_point[1] - avg_wrists_y
 
     def calculate_attempt_positions(self, points):
-        """Calculate start and final positions of pulling up attempt.
+        """Calculate the initial and final positions of a pulling up attempt.
 
-        To count unclean reps we have to define position from which we start to count unclean repetition
-        and position in which we consider this repetition as done.
-        So we find distance between wrists and chin (since we're in the initial phase that's maximum
+        To count unclean reps we have to define the position from which we start to count unclean repetition
+        and the position in which we consider this repetition as done.
+        So we have found the distance between wrists and a chin (since we're in the initial phase that's maximum
         possible distance between these points) and multiply it by our chin-to-wrists-raise-ratio-to-start-attempt
         and chin-to-wrists-raise-ration-to-finish-attempt COEFFs.
         """
         distance_between_wrists_and_chin = self.find_distance_between_wrists_and_chin(points)
 
         if not distance_between_wrists_and_chin:
-            # if distance wasn't found we set our threshold distances in infinity to
+            # if the distance isn't found we set our threshold distances in infinity to
             # prevent unclean pull ups attempt counting while comparing them with current wrists-chin distances
             self._distance_between_chin_and_wrist_to_start_attempt = math.inf
             self._distance_between_chin_and_wrist_to_finish_attempt = math.inf
@@ -163,13 +163,13 @@ class PhaseQualifier:
                 1 - self.chin_to_wrists_raise_ratio_to_finish_attempt)
 
     def is_there_initial_position(self, points):
-        """Define whether there is an initial position viz. hanging in the bottom position on the straight arms.
+        """Define whether there is the initial position viz. hanging in the bottom position on the straight arms.
 
-        To define a hang in the bottom position on the straight arms we check the next conditions:
-        1) are arms straight?
-        2) are wrists over body?
+        To define hanging in the bottom position on the straight arms we check the following conditions:
+        1) Are arms straight?
+        2) Are wrists over the body?
 
-        NOTE: these conditions not enough to determine the hang exactly
+        NOTE: these conditions are not enough to determine hanging exactly
         but they work in "most" cases.
         """
         arms_are_straight = self.are_arms_straight(points)
@@ -179,9 +179,9 @@ class PhaseQualifier:
     def are_legs_together(self, points):
         """Define whether legs are together.
 
-        We find the angle between legs-vectors in points Hip - Knee and
+        We have found the angle between legs-vectors in points Hip - Knee and
         compare the angle with our leg-angle-threshold COEFF.
-        If legs weren't found we imply that legs are together otherwise
+        If legs aren't found we imply that legs are together otherwise
         we'd have "unknown state" every time when athlete's legs are out of the frame.
         """
         self._angle_between_legs = -math.inf
@@ -212,18 +212,18 @@ class PhaseQualifier:
         """Handle the pulling phase.
 
         From this phase we can pass to the next chinning phase or back to the previous initial position.
-        Next phase we determine by chin position above the wrists level.
-        To avoid false pull ups when an athlete imitate a pull up standing on the ground
+        The following phase we determine by the chin position above the wrists level.
+        To avoid false pull ups when an athlete imitates a pull up standing on the ground
         instead of executing real one, we calculate vertical distance overcome by wrists and by shoulders in the frames
         amount of which is defined by our false-pull-up-check-queue-history COEFF.
-        And in moment possible pull up we compare these distance and count pull up if the distance overcome by
+        And at the moment of a possible pull up we compare these distances and count pull up if the distance overcome by
         shoulders is greater than the distance overcome by wrists
-        (in real pull up there's a shoulders movement not a wrists one).
+        (in a real pull up there's a shoulders movement not a wrists one).
 
-        If we don't qualify any of the possible phases we check possibility of unclean pull up.
+        If we don't qualify any of the possible phases we check a possibility of unclean pull up.
 
         Note: we don't compare the chin position with the bar since we only operate with
-        athlete's body key points, so it will be inaccurate a bit.
+        athlete's body key points, so it will be a bit inaccurate.
         """
         self.update_wrists_y_deviations(points)
         self.update_shoulders_y_deviations(points)
@@ -243,10 +243,10 @@ class PhaseQualifier:
     def define_unclean_pull_up_state(self, points):
         """Define unclean pull up state.
 
-        If current wrists-chin distance less than our distance-between-chin-and-wrist-to-start-attempt we consider
+        If a current wrists-chin distance is less than our distance-between-chin-and-wrist-to-start-attempt we consider
         this repetition as an pull up attempt.
-        If current wrists-chin distance greater than our distance-between-chin-and-wrist-to-finish-attempt we increase
-        unclean pull ups counter.
+        If a current wrists-chin distance is greater than our distance-between-chin-and-wrist-to-finish-attempt we increase
+        the unclean pull ups counter.
         """
         if not self.chin_point:
             return
@@ -263,7 +263,7 @@ class PhaseQualifier:
                 self.reset_pull_up_attempt()
 
     def update_wrists_y_deviations(self, points):
-        """Add current wrists y deviation to wrists y deviations queue."""
+        """Add a current wrists y deviation to a wrists y deviations queue."""
         cur_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
         if self._prev_wrists_y:
             cur_wrists_y_deviation = abs(self._prev_wrists_y - cur_wrists_y)
@@ -271,7 +271,7 @@ class PhaseQualifier:
         self._prev_wrists_y = cur_wrists_y
 
     def update_shoulders_y_deviations(self, points):
-        """Add current shoulders y deviation to shoulders y deviations queue."""
+        """Add a current shoulders y deviation to a shoulders y deviations queue."""
         cur_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
         if self._prev_shoulders_y:
             cur_shoulders_y_deviation = abs(self._prev_shoulders_y - cur_shoulders_y)
@@ -281,21 +281,21 @@ class PhaseQualifier:
     def process_lowering(self, points):
         """Handle the lowering pull up phase.
 
-        In this phase we wait for the next phase viz. an initial phase.
+        In this phase we are waiting for the next phase viz. the initial phase.
         """
         if self.is_there_initial_position(points):
             self._cur_phase = self._phases[0]
 
     def is_there_hang(self, points):
-        """Define whether is there a hang on the bar.
+        """Define whether there is hanging on the bar.
 
-        To define a hang on the bar we check the next conditions:
-        1) are wrists on the same level (y axis)?
-        2) are wrists higher than elbows?
-        3) is head between wrists (as the head we use the point of chin)?
-        4) are legs together?
+        To define hanging on the bar we check the following conditions:
+        1) Are wrists on the same level (y axis)?
+        2) Are wrists higher than elbows?
+        3) Is head between wrists (as the head we use the point of chin)?
+        4) Are legs together?
 
-        NOTE: these conditions not enough to determine the hang exactly
+        NOTE: these conditions are not enough to determine the hang exactly
         but they work in "most" cases.
         """
         wrists_are_on_same_level = self.are_wrists_on_same_level(points)
@@ -325,9 +325,9 @@ class PhaseQualifier:
     def are_wrists_over_body(points):
         """Define whether wrists are higher than all other body parts.
 
-        We have to compare wrists y-coordinate with other body parts' y coordinates
-        but since coordinate system begins at the top left corner our highest
-        point is actually lowest one.
+        We have to compare a wrists y-coordinate with other body parts' y coordinates
+        but since the coordinate system begins at the top left corner our highest
+        point is actually the lowest one.
         """
         if not (points['LWrist'] and points['RWrist']):
             return False
@@ -343,7 +343,7 @@ class PhaseQualifier:
     def are_arms_straight(self, points):
         """Define whether arms are straight.
 
-         We find the angle in each arm between next points: shoulder - elbow - writs and
+         We have found the angle in each arm between next points: shoulder - elbow - writs and
          then compare the angle with our arm-angle-threshold COEFF.
         """
         self._cur_left_arm_angle, self._cur_right_arm_angle = math.inf, math.inf
@@ -398,15 +398,13 @@ class PhaseQualifier:
     def define_chin_point(self, points):
         """Define chin point.
 
-        We define chin point by ratio between ears/nose and neck.
-        If we've got nose point we use it to get more accurate chin point
+        We have defined a chin point by ratio between ears/nose and neck.
+        If we've got a nose point we use it to get more accurate chin point
         but if we haven't got this one (the athlete is standing with his back to the camera,
-        point not detected) we use ears points to obtain nose point in the next way:
+        the point is not found) we use ears points to obtain nose point in the next way:
         nose_x = (l_ear_x + r_ear_x) / 2
         nose_y = (l_ear_y + r_ear_y) / 2.
-        Next we use our neck-chin-nose-ratio COEFF to define chin point.
-
-        :param points: person key points
+        Next we use our neck-chin-nose-ratio COEFF to define a chin point.
         """
         # define chin point by simple ratio between ears(x) and ears-neck(y)
         l_ear_point, r_ear_point, neck_point, nose_point = points['LEar'], points['REar'], points['Neck'], points[

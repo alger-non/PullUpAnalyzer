@@ -6,7 +6,7 @@ from Animator import Animator
 
 
 class ResultsDrawer:
-    """Class drawing general information about pull up process."""
+    """Class drawing the general information about the pull up process."""
     def __init__(self, fps, animation_duration_in_sec=1, animation_min_font_thickness=2, animation_max_font_thickness=9,
                  animation_min_line_thickness=2, animation_max_line_thickness=13):
         self.old_reps = 0

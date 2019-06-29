@@ -7,7 +7,7 @@ import time
 
 
 class PullUpCounter:
-    """The general class for launching pull ups counter."""
+    """The general class for launching the pull ups counter."""
     def __init__(self):
         self.input_file = ""
         self.short_input_filename = ""
@@ -33,7 +33,7 @@ class PullUpCounter:
         self.parse_cmd_line()
 
     def parse_cmd_line(self):
-        """Extract arguments from command line."""
+        """Extract arguments from the command line."""
         parser = argparse.ArgumentParser()
         parser.add_argument('input_file', help='directory containing source video and json data directory')
         parser.add_argument('output_dir', help='directory in which will be saved the final video')
@@ -58,9 +58,10 @@ class PullUpCounter:
             raise FileNotFoundError("Output directory not found.")
 
     def find_json_dir_by_video_name(self, filename):
-        """Find directory consisting json files by video name.
+        """Find a directory consisting json files by video name.
 
-        In the directory containing our video file we try to find the directory having the same name as video.
+        In the directory containing our video file we are trying to find the directory
+        having the same name which the video has.
         """
         par_dir = os.path.dirname(filename)
         possible_json_dir = f'{os.path.join(par_dir, self.short_input_filename)}_json'
@@ -79,7 +80,7 @@ class PullUpCounter:
                                             (cap_width, cap_height))
 
     def start(self):
-        """Launch pull up counter in the way depending on the chosen method."""
+        """Launch the pull up counter in the way depending on the chosen method."""
         self.create_video_capture()
         self.create_video_writer()
         if self.use_raw_data:
@@ -88,7 +89,7 @@ class PullUpCounter:
             self.exec()
 
     def exec(self):
-        """Process input file using OpenPose library."""
+        """Process the input video using the OpenPose library."""
         params = dict()
         params["model_folder"] = "models/"
         params['number_people_max'] = 1
@@ -105,7 +106,7 @@ class PullUpCounter:
                 break
 
     def exec_with_raw_data(self):
-        """Process input file using prepared json-files."""
+        """Process the input file using prepared json-files."""
         for processed_frame in self.video_processor.process_video_with_raw_data(self.cap, self.json_dir):
             self.show_processed_frame(processed_frame)
             self.write_frame_to_output(processed_frame)

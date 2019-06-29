@@ -4,7 +4,7 @@ import cv2
 
 
 class Animator:
-    """Class performing animation."""
+    """Class performing an animation."""
 
     def __init__(self, animation_queue_size, animation_min_font_thickness, animation_max_font_thickness,
                  animation_min_line_thickness, animation_max_line_thickness):

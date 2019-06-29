@@ -2,7 +2,7 @@ import cv2
 
 
 class Drawer:
-    """Class for drawing performing simple tasks."""
+    """Class performing simple drawing tasks."""
     YELLOW_COLOR = (0, 255, 255)
     RED_COLOR = (0, 0, 255)
     BLUE_COLOR = (255, 0, 0)
