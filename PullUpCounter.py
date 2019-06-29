@@ -51,6 +51,8 @@ class PullUpCounter:
             self.json_dir = self.find_json_dir_by_video_name(args.input_file)
             if not self.json_dir:
                 raise FileNotFoundError("Json directory not found in the video's specified directory")
+        else:
+            from openpose import pyopenpose as op
         self.output_dir = args.output_dir
         if not os.path.isdir(self.output_dir):
             raise FileNotFoundError("Output directory not found.")
@@ -87,7 +89,6 @@ class PullUpCounter:
 
     def exec(self):
         """Process input file using OpenPose library."""
-        from openpose import pyopenpose as op
         params = dict()
         params["model_folder"] = "models/"
         params['number_people_max'] = 1

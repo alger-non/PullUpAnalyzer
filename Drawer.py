@@ -65,7 +65,7 @@ class Drawer:
         cv2.line(frame, (int(x + a / 3), int(y + 2 * a / 3)), (int(x + a / 2), y), line_color, line_thickness)
         cv2.line(frame, (int(x + 2 * a / 3), int(y + 2 * a / 3)), (int(x + a / 2), y), line_color, line_thickness)
 
-    # Draws glyph in rectangle with side=a and a top left corner = (x,y)
+    # Draws a glyph in a rectangle with a side=a and a top left corner = (x,y)
     @staticmethod
     def glyph_asc(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
         Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
