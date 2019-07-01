@@ -1,6 +1,6 @@
 import sys
 from sys import platform
-
+from AudioProcessor import AudioProcessor
 from PhaseQualifier import PhaseQualifier
 from VideoProcessor import VideoProcessor
 import cv2
@@ -27,7 +27,8 @@ try:
         from openpose import pyopenpose as op
 except ImportError as e:
     print(
-        'Error: OpenPose library could not be found. Did you enable `BUILD_PYTHON` in CMake and have this Python script in the right folder?')
+        'Error: OpenPose library could not be found. Did you enable `BUILD_PYTHON`'
+        ' in CMake and have this Python script in the right folder?')
     raise e
 
 
@@ -42,6 +43,7 @@ class PullUpCounter:
         self.use_raw_data = False
         self.cap = None
         self.video_writer = None
+        self.audio_writer = None
         self.required_points = {"Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4, "LShoulder": 5,
                                 "LElbow": 6,
                                 "LWrist": 7, "MidHip": 8, "RHip": 9, "RKnee": 10, "RAnkle": 11, "LHip": 12, "LKnee": 13,
@@ -55,7 +57,7 @@ class PullUpCounter:
             ['RKnee', 'RAnkle'])
 
         self.pose_processor = PhaseQualifier(30, 30, 5, 0.5)
-        self.video_processor = VideoProcessor(self.pose_processor, self.required_points, self.required_pairs)
+        self.video_processor = None
         self.parse_cmd_line()
 
     def parse_cmd_line(self):
@@ -99,18 +101,35 @@ class PullUpCounter:
         cap_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = int(self.cap.get(cv2.CAP_PROP_FPS))
 
-        output_filename = os.path.join(self.output_dir, f'{self.short_input_filename}_out.avi')
-        self.video_writer = cv2.VideoWriter(output_filename, cv2.VideoWriter_fourcc(*"FMP4"), fps,
+        output_filename_without_sound = os.path.join('/tmp', f'{self.short_input_filename}.avi')
+        self.video_writer = cv2.VideoWriter(output_filename_without_sound, cv2.VideoWriter_fourcc(*"FMP4"), fps,
                                             (cap_width, cap_height))
+
+    def add_audio(self):
+        self.audio_writer.add_background_audio()
+
+    def create_audio_writer(self):
+        output_filename_without_sound = os.path.join('/tmp', f'{self.short_input_filename}.avi')
+        output_filename_with_sound = os.path.join(self.output_dir, f'{self.short_input_filename}.avi')
+        self.audio_writer = AudioProcessor(self.input_file, output_filename_without_sound, output_filename_with_sound)
+
+    def create_video_processor(self):
+        self.video_processor = VideoProcessor(self.cap, self.pose_processor, self.required_points, self.required_pairs)
 
     def start(self):
         """Launch the pull up counter in the way depending on the chosen method."""
         self.create_video_capture()
         self.create_video_writer()
+        self.create_audio_writer()
+        self.create_video_processor()
+
         if self.use_raw_data:
             self.exec_with_raw_data()
         else:
             self.exec()
+        self.release_video_cap()
+        self.release_video_writer()
+        cv2.destroyAllWindows()
 
     def exec(self):
         """Process the input video using the OpenPose library."""
@@ -137,6 +156,14 @@ class PullUpCounter:
             if cv2.waitKey(1) > 0:
                 break
 
+    def release_video_cap(self):
+        if self.cap:
+            self.cap.release()
+
+    def release_video_writer(self):
+        if self.video_writer:
+            self.video_writer.release()
+
     @staticmethod
     def show_processed_frame(frame):
         cv2.imshow('Output', frame)
@@ -144,15 +171,15 @@ class PullUpCounter:
     def write_frame_to_output(self, frame):
         self.video_writer.write(frame)
 
-    def finish(self):
-        if self.cap:
-            self.cap.release()
-        if self.video_writer:
-            self.video_writer.release()
-
 
 pull_up_counter = PullUpCounter()
 t = time.time()
 pull_up_counter.start()
-pull_up_counter.finish()
+
+for rep_time, is_clean_rep in pull_up_counter.video_processor.events_labels:
+    event = 'Complete' if is_clean_rep else 'Fail'
+    pull_up_counter.audio_writer.add_event(event, rep_time)
+
+
+pull_up_counter.add_audio()
 print(f'Execution time: {time.time() - t:.3} sec')

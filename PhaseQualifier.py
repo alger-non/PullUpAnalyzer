@@ -384,7 +384,7 @@ class PhaseQualifier:
         avg_wrists_y = (left_wrist_point[1] + right_wrist_point[1]) / 2
         return self.chin_point[1] <= avg_wrists_y
 
-    def define_state(self, points):
+    def qualify_state(self, points):
         self.define_chin_point(points)
         if self.is_there_hang(points):
             self.zero_failed_phase_define_attempts()
