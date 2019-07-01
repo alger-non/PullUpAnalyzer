@@ -81,11 +81,11 @@ class ResultsDrawer:
 
         alpha = 0.7
         img2 = cv2.imread(input_file)
-        height = overlay.shape[0]
-        pictogram = cv2.resize(img2, (100, 100), interpolation=cv2.INTER_AREA)
-        x, y, w, h = 0, height - 100, 100, 100
+        size = 100
+        pictogram = cv2.resize(img2, (size, size), interpolation=cv2.INTER_AREA)
+        x, y, w, h = 0, 80, size, size
         cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
-        overlay[height - 100:, :100] = pictogram
+        overlay[80:80 + size, :size] = pictogram
         new_frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
         return new_frame
 
