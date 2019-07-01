@@ -73,12 +73,37 @@ class ResultsDrawer:
         Drawer.print_message(frame, f'Time: {mins}:{secs:02}', x, y)
 
     @staticmethod
-    def draw_info_region(frame):
+    def draw_info_region(frame, phase_qualifier: PhaseQualifier):
         overlay = frame.copy()
         x, y, w, h = 0, 0, 355, 80
         cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
         alpha = 0.7
-        return cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+        new_frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+        return ResultsDrawer.draw_glyph(new_frame, phase_qualifier)
+
+    @staticmethod
+    def draw_glyph(frame, phase_qualifier: PhaseQualifier):
+        overlay = frame.copy()
+        if phase_qualifier.cur_state == 'beginning':
+            input_file = 'icons/2.jpg'
+        elif phase_qualifier.cur_state == 'chinning':
+            input_file = 'icons/1.jpg'
+        elif phase_qualifier.cur_state == 'pulling':
+            input_file = 'icons/3.jpg'
+        elif phase_qualifier.cur_state == 'lowering':
+            input_file = 'icons/4.jpg'
+        else:
+            input_file = 'icons/5.jpg'
+
+        alpha = 0.7
+        img2 = cv2.imread(input_file)
+        height = overlay.shape[0]
+        pictogram = cv2.resize(img2, (100, 100), interpolation=cv2.INTER_AREA)
+        x, y, w, h = 0, height - 100, 100, 100
+        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
+        overlay[height - 100:, :100] = pictogram
+        new_frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+        return new_frame
 
     def draw_line_between_wrists(self, frame, points):
         l_wrist, r_wrist = points['LWrist'], points['RWrist']
@@ -95,7 +120,7 @@ class ResultsDrawer:
             cv2.circle(frame, tuple(phase_qualifier.chin_point), 8, Drawer.BLUE_COLOR, thickness=-1, lineType=cv2.FILLED)
 
     def display_info(self, frame, phase_qualifier: PhaseQualifier):
-        new_frame = self.draw_info_region(frame)
+        new_frame = self.draw_info_region(frame, phase_qualifier)
         self.print_repeats(new_frame, phase_qualifier, 0, 30)
         self.print_fails(new_frame, phase_qualifier, 200, 30)
         self.draw_phase(new_frame, phase_qualifier, 200, 45, 30)
