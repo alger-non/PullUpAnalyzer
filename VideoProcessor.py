@@ -23,6 +23,7 @@ class VideoProcessor:
         :param op_wrapper: an initialized open-pose instance to handle frames
         :return: a generator returning processed frames
         """
+        from openpose import pyopenpose as op
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         # pass fps to the ResultsDrawer instance to obtain same animation effect on videos with different fps
         self._drawer = ResultsDrawer(fps)
