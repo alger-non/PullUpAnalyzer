@@ -17,22 +17,6 @@ class ResultsDrawer:
                                  animation_min_line_thickness, animation_max_line_thickness)
         self.timer = Timer(fps)
 
-    @staticmethod
-    def draw_phase(frame, phase_qualifier: PhaseQualifier, x, y, side):
-
-        Drawer.print_message(frame, 'Phase:', x, y + side)
-        x += 100
-        if phase_qualifier.cur_state == 'beginning':
-            Drawer.glyph_bottom_hanging(frame, x, y, side)
-        elif phase_qualifier.cur_state == 'chinning':
-            Drawer.glyph_top_hanging(frame, x, y, side)
-        elif phase_qualifier.cur_state == 'pulling':
-            Drawer.glyph_asc(frame, x, y, side)
-        elif phase_qualifier.cur_state == 'lowering':
-            Drawer.glyph_desc(frame, x, y, side)
-        else:
-            Drawer.glyph_undefined(frame, x + 10, y + 30)
-
     def print_repeats(self, frame, phase_qualifier: PhaseQualifier, x, y):
         now_repeats = phase_qualifier.clean_repeats
         if self.old_reps != now_repeats:
@@ -123,7 +107,6 @@ class ResultsDrawer:
         new_frame = self.draw_info_region(frame, phase_qualifier)
         self.print_repeats(new_frame, phase_qualifier, 0, 30)
         self.print_fails(new_frame, phase_qualifier, 200, 30)
-        self.draw_phase(new_frame, phase_qualifier, 200, 45, 30)
         self.print_elapsed_time(new_frame, phase_qualifier, 0, 75)
         return new_frame
 

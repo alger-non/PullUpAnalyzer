@@ -54,42 +54,6 @@ class Drawer:
         cv2.circle(frame, (point[0], point[1]), radius, color, thickness=-1, lineType=cv2.FILLED)
 
     @staticmethod
-    def down_arrow(frame, x, y, a, line_color=BLACK_COLOR, line_thickness=2):
-        cv2.line(frame, (int(x + a / 2), y), (int(x + a / 2), y + a), line_color, line_thickness)
-        cv2.line(frame, (int(x + a / 3), int(y + 2 * a / 3)), (int(x + a / 2), y + a), line_color, line_thickness)
-        cv2.line(frame, (int(x + a / 2), y + a), (int(x + 2 * a / 3), int(y + 2 * a / 3)), line_color, line_thickness)
-
-    @staticmethod
-    def up_arrow(frame, x, y, a, line_color=BLACK_COLOR, line_thickness=2):
-        cv2.line(frame, (int(x + a / 2), y), (int(x + a / 2), y + a), line_color, line_thickness)
-        cv2.line(frame, (int(x + a / 3), int(y + 2 * a / 3)), (int(x + a / 2), y), line_color, line_thickness)
-        cv2.line(frame, (int(x + 2 * a / 3), int(y + 2 * a / 3)), (int(x + a / 2), y), line_color, line_thickness)
-
-    # Draws a glyph in a rectangle with a side=a and a top left corner = (x,y)
-    @staticmethod
-    def glyph_asc(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
-        Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
-        Drawer.up_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
-
-    @staticmethod
-    def glyph_desc(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
-        Drawer.down_arrow(frame, x, y, a, line_color, line_thickness)
-        Drawer.down_arrow(frame, int(x + a / 2), y, a, line_color, line_thickness)
-
-    @staticmethod
-    def glyph_bottom_hanging(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
-        Drawer.down_arrow(frame, x, y, a, line_color, line_thickness)
-
-    @staticmethod
-    def glyph_top_hanging(frame, x, y, a, line_color=RED_COLOR, line_thickness=2):
-        Drawer.up_arrow(frame, x, y, a, line_color, line_thickness)
-
-    @staticmethod
-    def glyph_undefined(frame, x, y, text_color=RED_COLOR, thickness=DEFAULT_FONT_THICKNESS, font_scale=1):
-        cv2.putText(frame, '??', (x, y,), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color, thickness,
-                    lineType=cv2.LINE_AA)
-
-    @staticmethod
     def print_message_with_text_edging(frame, x, y, value, border_size=5, thickness=DEFAULT_FONT_THICKNESS,
                                        text_color=RED_COLOR, border_color=DEFAULT_COLOR):
         Drawer.print_message(frame, f'{value}', x, y, text_color=border_color, thickness=thickness + border_size,
