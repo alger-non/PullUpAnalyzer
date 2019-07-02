@@ -16,6 +16,7 @@ class Drawer:
     DEFAULT_FONT_THICKNESS = 1
     DEFAULT_LINE_THICKNESS = 3
     DEFAULT_COLOR = YELLOW_COLOR
+    DEFAULT_BORDER_COLOR = YELLOW_COLOR
     DEFAULT_BORDER_SIZE = 2
 
     def __init__(self):
@@ -57,7 +58,7 @@ class Drawer:
 
     @staticmethod
     def print_message_with_text_edging(frame, x, y, value, border_size=DEFAULT_BORDER_SIZE, thickness=DEFAULT_FONT_THICKNESS,
-                                       text_color=RED_COLOR, border_color=DEFAULT_COLOR, font=cv2.FONT_HERSHEY_COMPLEX_SMALL):
+                                       text_color=RED_COLOR, border_color=DEFAULT_BORDER_COLOR, font=cv2.FONT_HERSHEY_COMPLEX_SMALL):
         Drawer.print_message(frame, f'{value}', x, y, text_color=border_color, thickness=thickness + border_size,
                              font_scale=1, font=font)
         Drawer.print_message(frame, f'{value}', x, y, thickness=thickness, text_color=text_color,
