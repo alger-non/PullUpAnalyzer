@@ -16,14 +16,17 @@ class AudioProcessor:
         self.unclean_rep_event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Fail_event.wav'))
 
     def get_audio(self):
-        self.audio = VideoFileClip(self._input_source_video).audio
+        video = VideoFileClip(self._input_source_video)
+        self.audio = video.audio
         self.audio_fps = self.audio.fps
+        video.close()
 
     def add_background_audio(self):
         video = VideoFileClip(self._input_source_processed_video)
         video = video.set_duration(self.audio.duration, change_end=False)
         video = video.set_audio(self.audio)
         video.write_videofile(self._output_source_video, audio=True, codec='libx264')
+        video.close()
 
     def add_event(self, event_type, event_time):
         if event_type == "Complete":
