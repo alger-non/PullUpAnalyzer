@@ -14,11 +14,19 @@ class AudioProcessor:
 
     def get_audio(self):
         self.video = VideoFileClip(self._input_source_video)
+        print(self.video.duration)
+        print(self.video.audio.duration)
         self.video_fps = self.video.fps
         self.audio_fps = self.video.audio.fps
 
     def add_background_audio(self, fps=29):
         video = VideoFileClip(self._input_source_processed_video)
+        audio = AudioFileClip(self._output_background_audio)
+        print(audio.duration)
+        print(video.duration)
+        print(self.video.audio.duration)
+
+        video = video.set_audio()
         video.write_videofile(self._output_source_video, audio=self._output_background_audio, codec='libx264',
                               fps=self.video_fps, audio_fps=self.audio_fps, audio_codec='libmp3lame')
 

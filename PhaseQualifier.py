@@ -9,7 +9,7 @@ class PhaseQualifier:
     def __init__(self, arm_angle_threshold, leg_angle_threshold, failed_attempts_amount_threshold,
                  neck_chin_top_of_head_ratio, chin_to_wrists_raise_ratio_to_start_attempt=0.7,
                  chin_to_wrists_raise_ration_to_finish_attempt=0.1, wrists_level_angle_threshold=5,
-                 false_pull_up_check_queue_history=3):
+                 false_pull_up_check_queue_history=15):
         self._cur_wrists_level_angle = None
         self._cur_left_arm_angle, self._cur_right_arm_angle = None, None
         self._cur_left_leg_angle, self._cur_right_leg_angle = None, None
