@@ -45,8 +45,9 @@ class Drawer:
                         lineType=cv2.LINE_AA)
 
     @staticmethod
-    def print_message(frame, message, x, y, text_color=RED_COLOR, thickness=DEFAULT_FONT_THICKNESS, font_scale=1):
-        cv2.putText(frame, message, (x, y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color, thickness,
+    def print_message(frame, message, x, y, text_color=RED_COLOR, thickness=DEFAULT_FONT_THICKNESS, font_scale=1,
+                      font=cv2.FONT_HERSHEY_SIMPLEX):
+        cv2.putText(frame, message, (x, y), font, font_scale, text_color, thickness,
                     lineType=cv2.LINE_AA)
 
     @staticmethod

@@ -56,12 +56,15 @@ class ResultsDrawer:
         if phase_qualifier.cur_state in phase_qualifier.phases[4]:
             cur_time = self.timer.get_stored_time()
         mins, secs = int(cur_time / 60), int(cur_time % 60)
-        Drawer.print_message(frame, f'Time: {mins}:{secs:02}', x, y)
+        Drawer.print_message(frame, f'Time: {mins}:{secs:02}', x, y, font_scale=1, thickness=1,
+                             font=cv2.FONT_HERSHEY_COMPLEX_SMALL, text_color=Drawer.RED_COLOR)
 
     @staticmethod
     def draw_info_region(frame, phase_qualifier: PhaseQualifier):
         overlay = frame.copy()
-        x, y, w, h = 0, 0, 355, 80
+        x, y, w, h = 0, 0, 355, 40
+        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
+        x, y, w, h = 0, 40, 150, 40
         cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
         alpha = 0.7
         new_frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)

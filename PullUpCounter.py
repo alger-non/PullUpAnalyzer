@@ -13,7 +13,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 class PullUpCounter:
     """The general class for launching the pull ups counter."""
-
     def __init__(self):
         self.input_file = ""
         self.short_input_filename = ""
@@ -81,7 +80,7 @@ class PullUpCounter:
         fps = int(self.cap.get(cv2.CAP_PROP_FPS))
 
         output_filename_without_sound = os.path.join(self.output_dir, f'{self.short_input_filename}_without_audio.avi')
-        self.video_writer = cv2.VideoWriter(output_filename_without_sound, cv2.VideoWriter_fourcc(*"XVID"), fps,
+        self.video_writer = cv2.VideoWriter(output_filename_without_sound, cv2.VideoWriter_fourcc(*"FMP4"), fps,
                                             (cap_width, cap_height))
 
     def add_audio(self):
