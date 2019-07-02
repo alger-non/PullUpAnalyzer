@@ -69,15 +69,15 @@ class ResultsDrawer:
     def draw_glyph(frame, phase_qualifier: PhaseQualifier):
         overlay = frame.copy()
         if phase_qualifier.cur_state == 'beginning':
-            input_file = 'icons/2.jpg'
+            input_file = 'icons/1.png'
         elif phase_qualifier.cur_state == 'chinning':
-            input_file = 'icons/1.jpg'
+            input_file = 'icons/4.png'
         elif phase_qualifier.cur_state == 'pulling':
-            input_file = 'icons/3.jpg'
+            input_file = 'icons/3.png'
         elif phase_qualifier.cur_state == 'lowering':
-            input_file = 'icons/4.jpg'
+            input_file = 'icons/2.png'
         else:
-            input_file = 'icons/5.jpg'
+            input_file = 'icons/5.png'
 
         alpha = 0.7
         img2 = cv2.imread(input_file)
