@@ -2,6 +2,7 @@ from moviepy.editor import *
 
 
 class AudioProcessor:
+    sounds_dir = 'sounds'
 
     def __init__(self, input_source_video_with_sound, input_source_video_without_sound, output_source_video):
         self._input_source_video = input_source_video_with_sound
@@ -24,7 +25,7 @@ class AudioProcessor:
 
     def add_event(self, event_type, event_time):
         if event_type == "Complete":
-            event_audio = AudioFileClip('sounds/Complete_event.wav')
+            event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Complete_event.wav'))
         else:
-            event_audio = AudioFileClip('sounds/Fail_event.wav')
+            event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Fail_event.wav'))
         self.audio = CompositeAudioClip([self.audio, event_audio.set_start(event_time)])

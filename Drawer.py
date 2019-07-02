@@ -13,9 +13,10 @@ class Drawer:
     DARK_RED_COLOR = (1, 1, 75)
     PURPLE_COLOR = (120, 5, 120)
 
-    DEFAULT_FONT_THICKNESS = 2
+    DEFAULT_FONT_THICKNESS = 1
     DEFAULT_LINE_THICKNESS = 3
     DEFAULT_COLOR = YELLOW_COLOR
+    DEFAULT_BORDER_SIZE = 2
 
     def __init__(self):
         pass
@@ -55,12 +56,12 @@ class Drawer:
         cv2.circle(frame, (point[0], point[1]), radius, color, thickness=-1, lineType=cv2.FILLED)
 
     @staticmethod
-    def print_message_with_text_edging(frame, x, y, value, border_size=5, thickness=DEFAULT_FONT_THICKNESS,
-                                       text_color=RED_COLOR, border_color=DEFAULT_COLOR):
+    def print_message_with_text_edging(frame, x, y, value, border_size=DEFAULT_BORDER_SIZE, thickness=DEFAULT_FONT_THICKNESS,
+                                       text_color=RED_COLOR, border_color=DEFAULT_COLOR, font=cv2.FONT_HERSHEY_COMPLEX_SMALL):
         Drawer.print_message(frame, f'{value}', x, y, text_color=border_color, thickness=thickness + border_size,
-                             font_scale=1.1)
+                             font_scale=1, font=font)
         Drawer.print_message(frame, f'{value}', x, y, thickness=thickness, text_color=text_color,
-                             font_scale=1.1)
+                             font_scale=1, font=font)
 
     @staticmethod
     def draw_rectangle(frame, x, y, w, h):
