@@ -77,10 +77,10 @@ class PullUpCounter:
     def create_video_writer(self):
         cap_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         cap_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps = int(self.cap.get(cv2.CAP_PROP_FPS))
+        fps = self.cap.get(cv2.CAP_PROP_FPS)
 
         output_filename_without_sound = os.path.join(self.output_dir, f'{self.short_input_filename}_without_audio.avi')
-        self.video_writer = cv2.VideoWriter(output_filename_without_sound, cv2.VideoWriter_fourcc(*"FMP4"), fps,
+        self.video_writer = cv2.VideoWriter(output_filename_without_sound, cv2.VideoWriter_fourcc(*"XVID"), fps,
                                             (cap_width, cap_height))
 
     def add_audio(self):
@@ -162,6 +162,11 @@ class PullUpCounter:
         if self.cap:
             self.cap.release()
 
+    def add_events(self):
+        for rep_time, is_clean_rep in self.video_processor.events_labels:
+            event = 'Complete' if is_clean_rep else 'Fail'
+            self.audio_writer.add_event(event, rep_time)
+
     def release_video_writer(self):
         if self.video_writer:
             self.video_writer.release()
@@ -177,10 +182,6 @@ class PullUpCounter:
 pull_up_counter = PullUpCounter()
 t = time.time()
 pull_up_counter.start()
-
-for rep_time, is_clean_rep in pull_up_counter.video_processor.events_labels:
-    event = 'Complete' if is_clean_rep else 'Fail'
-    pull_up_counter.audio_writer.add_event(event, rep_time)
-
+pull_up_counter.add_events()
 pull_up_counter.add_audio()
 print(f'Execution time: {time.time() - t:.3} sec')

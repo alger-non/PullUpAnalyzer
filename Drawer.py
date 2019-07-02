@@ -61,3 +61,7 @@ class Drawer:
                              font_scale=1.1)
         Drawer.print_message(frame, f'{value}', x, y, thickness=thickness, text_color=text_color,
                              font_scale=1.1)
+
+    @staticmethod
+    def draw_rectangle(frame, x, y, w, h):
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 0), -1)

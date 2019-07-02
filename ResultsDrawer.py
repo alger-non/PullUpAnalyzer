@@ -1,5 +1,5 @@
 import os
-
+import numpy as np
 from Timer import Timer
 from PhaseQualifier import PhaseQualifier
 from Drawer import Drawer
@@ -62,25 +62,27 @@ class ResultsDrawer:
     @staticmethod
     def draw_info_region(frame, phase_qualifier: PhaseQualifier):
         overlay = frame.copy()
-        x, y, w, h = 0, 0, 355, 40
-        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
-        x, y, w, h = 0, 40, 150, 40
-        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
+        Drawer.draw_rectangle(overlay, 0, 0, 355, 40)
+        Drawer.draw_rectangle(overlay, 0, 40, 150, 40)
         alpha = 0.7
         new_frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
         return ResultsDrawer.draw_glyph(new_frame, phase_qualifier)
+
+
 
     @staticmethod
     def draw_glyph(frame, phase_qualifier: PhaseQualifier):
         overlay = frame.copy()
         icons_dir = 'icons'
-        cur_icon = os.path.join(icons_dir, f'{phase_qualifier.cur_state}.png')
-        alpha = 0.7
-        pictogram = cv2.imread(cur_icon)
         size = 150
+        alpha = 0.7
+        cur_icon_name = os.path.join(icons_dir, f'{phase_qualifier.cur_state}.png')
+        if not os.path.isfile(os.path.abspath(cur_icon_name)):
+            print(f"{cur_icon_name} isn't found.")
+            return frame
+        pictogram = cv2.imread(cur_icon_name)
         pictogram = cv2.resize(pictogram, (size, size), interpolation=cv2.INTER_AREA)
-        x, y, w, h = 0, 80, size, size
-        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 0), -1)
+        Drawer.draw_rectangle(overlay, 0, 80, size, size)
         overlay[80:80 + size, :size] = pictogram
         new_frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
         return new_frame
