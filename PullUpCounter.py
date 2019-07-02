@@ -98,8 +98,8 @@ class PullUpCounter:
         """Launch the pull up counter in the way depending on the chosen method."""
         self.create_video_capture()
         self.create_video_writer()
-        self.create_audio_writer()
         self.create_video_processor()
+        pull_up_counter.create_audio_writer()
 
         if self.use_raw_data:
             self.exec_with_raw_data()
@@ -162,7 +162,7 @@ class PullUpCounter:
         if self.cap:
             self.cap.release()
 
-    def add_events(self):
+    def add_audio_events(self):
         for rep_time, is_clean_rep in self.video_processor.events_labels:
             event = 'Complete' if is_clean_rep else 'Fail'
             self.audio_writer.add_event(event, rep_time)
@@ -182,6 +182,6 @@ class PullUpCounter:
 pull_up_counter = PullUpCounter()
 t = time.time()
 pull_up_counter.start()
-pull_up_counter.add_events()
+pull_up_counter.add_audio_events()
 pull_up_counter.add_audio()
 print(f'Execution time: {time.time() - t:.3} sec')

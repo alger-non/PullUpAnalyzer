@@ -12,6 +12,8 @@ class AudioProcessor:
         self.audio = None
         self.audio_fps = None
         self.get_audio()
+        self.clean_rep_event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Complete_event.wav'))
+        self.unclean_rep_event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Fail_event.wav'))
 
     def get_audio(self):
         self.audio = VideoFileClip(self._input_source_video).audio
@@ -25,7 +27,7 @@ class AudioProcessor:
 
     def add_event(self, event_type, event_time):
         if event_type == "Complete":
-            event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Complete_event.wav'))
+            event_audio = self.clean_rep_event_audio
         else:
-            event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Fail_event.wav'))
+            event_audio = self.unclean_rep_event_audio
         self.audio = CompositeAudioClip([self.audio, event_audio.set_start(event_time)])
