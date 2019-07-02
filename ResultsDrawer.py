@@ -1,3 +1,5 @@
+import os
+
 from Timer import Timer
 from PhaseQualifier import PhaseQualifier
 from Drawer import Drawer
@@ -68,19 +70,10 @@ class ResultsDrawer:
     @staticmethod
     def draw_glyph(frame, phase_qualifier: PhaseQualifier):
         overlay = frame.copy()
-        if phase_qualifier.cur_state == 'beginning':
-            input_file = 'icons/beginning.png'
-        elif phase_qualifier.cur_state == 'chinning':
-            input_file = 'icons/chinning.png'
-        elif phase_qualifier.cur_state == 'pulling':
-            input_file = 'icons/pulling.png'
-        elif phase_qualifier.cur_state == 'lowering':
-            input_file = 'icons/lowering.png'
-        else:
-            input_file = 'icons/unknown.png'
-
+        icons_dir = 'icons'
+        cur_icon = os.path.join(icons_dir, f'{phase_qualifier.cur_state}.png')
         alpha = 0.7
-        pictogram = cv2.imread(input_file)
+        pictogram = cv2.imread(cur_icon)
         size = 150
         pictogram = cv2.resize(pictogram, (size, size), interpolation=cv2.INTER_AREA)
         x, y, w, h = 0, 80, size, size
