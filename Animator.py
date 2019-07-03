@@ -5,14 +5,13 @@ import cv2
 
 class Animator:
     """Class performing an animation."""
-
     def __init__(self, animation_queue_size, animation_min_font_thickness, animation_max_font_thickness,
                  animation_min_line_thickness, animation_max_line_thickness):
         self.animation_queue_size = animation_queue_size
-        self.clean_reps_font_animation_queue = deque(maxlen=self.animation_queue_size)
-        self.unclean_reps_font_animation_queue = deque(maxlen=self.animation_queue_size)
-        self.clean_reps_line_animation_queue = deque(maxlen=self.animation_queue_size)
-        self.unclean_reps_line_animation_queue = deque(maxlen=self.animation_queue_size)
+        self._clean_reps_font_animation_queue = deque(maxlen=self.animation_queue_size)
+        self._unclean_reps_font_animation_queue = deque(maxlen=self.animation_queue_size)
+        self._clean_reps_line_animation_queue = deque(maxlen=self.animation_queue_size)
+        self._unclean_reps_line_animation_queue = deque(maxlen=self.animation_queue_size)
 
         self.animation_min_font_thickness = animation_min_font_thickness
         self.animation_max_font_thickness = animation_max_font_thickness
@@ -20,13 +19,13 @@ class Animator:
         self.animation_max_line_thickness = animation_max_line_thickness
 
     def generate_clean_pull_up_animation(self, new_value):
-        self.clean_reps_line_animation_queue = self.generate_animation(new_value, self.clean_reps_font_animation_queue,
-                                                                       self.clean_reps_line_animation_queue,
-                                                                       Drawer.GREEN_COLOR)
+        self._clean_reps_line_animation_queue = self.generate_animation(new_value, self._clean_reps_font_animation_queue,
+                                                                        self._clean_reps_line_animation_queue,
+                                                                        Drawer.GREEN_COLOR)
 
     def generate_unclean_pull_up_animation(self, new_value):
-        self.generate_animation(new_value, self.unclean_reps_font_animation_queue,
-                                self.unclean_reps_line_animation_queue, Drawer.RED_COLOR)
+        self.generate_animation(new_value, self._unclean_reps_font_animation_queue,
+                                self._unclean_reps_line_animation_queue, Drawer.RED_COLOR)
 
     def generate_animation(self, new_value, font_animation_queue, line_animation_queue, line_animation_color):
         self.generate_font_animation_queue(new_value, font_animation_queue,
@@ -83,10 +82,10 @@ class Animator:
 
     def play_pull_up_line_animation(self, frame, point_a, point_b):
         thickness, color = None, None
-        if self.clean_reps_line_animation_queue:
-            thickness, color = self.clean_reps_line_animation_queue.pop()
-        elif self.unclean_reps_line_animation_queue:
-            thickness, color = self.unclean_reps_line_animation_queue.pop()
+        if self._clean_reps_line_animation_queue:
+            thickness, color = self._clean_reps_line_animation_queue.pop()
+        elif self._unclean_reps_line_animation_queue:
+            thickness, color = self._unclean_reps_line_animation_queue.pop()
         cv2.line(frame, point_a, point_b, color, thickness)
 
     @staticmethod
@@ -96,11 +95,11 @@ class Animator:
                                               text_color=draw_data[2])
 
     def play_clean_pull_up_font_animation(self, frame, x, y):
-        self.play_pull_up_font_animation(frame, self.clean_reps_font_animation_queue,
+        self.play_pull_up_font_animation(frame, self._clean_reps_font_animation_queue,
                                          x, y)
 
     def play_unclean_pull_up_font_animation(self, frame, x, y):
-        self.play_pull_up_font_animation(frame, self.unclean_reps_font_animation_queue, x, y)
+        self.play_pull_up_font_animation(frame, self._unclean_reps_font_animation_queue, x, y)
 
     def define_bgr_color_step(self, initial_color: tuple, final_color: tuple):
         iters = int(self.animation_queue_size / 2)
@@ -118,10 +117,10 @@ class Animator:
         return [sum([color_pair[0], -color_pair[1]]) for color_pair in zip(color, color_step)]
 
     def is_clean_pull_up_font_animation_playing(self):
-        return self.clean_reps_font_animation_queue
+        return self._clean_reps_font_animation_queue
 
     def is_unclean_pull_up_font_animation_playing(self):
-        return self.unclean_reps_font_animation_queue
+        return self._unclean_reps_font_animation_queue
 
     def is_pull_up_line_animation_playing(self):
-        return self.clean_reps_font_animation_queue or self.unclean_reps_line_animation_queue
+        return self._clean_reps_font_animation_queue or self._unclean_reps_line_animation_queue

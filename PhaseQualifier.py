@@ -22,11 +22,11 @@ class PhaseQualifier:
         self._unclean_repeats = 0
         self._failed_phase_define_attempts = 0
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
-        self._process_phase = {self._phases[0]: self.process_beginning,
-                               self._phases[1]: self.process_pulling,
-                               self._phases[2]: self.process_chinning,
-                               self._phases[3]: self.process_lowering,
-                               self._phases[4]: self.process_unknown_state}
+        self._process_phase = {self._phases[0]: self._process_beginning,
+                               self._phases[1]: self._process_pulling,
+                               self._phases[2]: self._process_chinning,
+                               self._phases[3]: self._process_lowering,
+                               self._phases[4]: self._process_unknown_state}
         self._chin_point = []
         self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
         self._distance_between_chin_and_wrist_to_start_attempt = None
@@ -82,17 +82,17 @@ class PhaseQualifier:
     chin_point = property(get_chin_point)
     phases = property(get_phases)
 
-    def zero_failed_phase_define_attempts(self):
+    def _zero_failed_phase_define_attempts(self):
         self._failed_phase_define_attempts = 0
 
-    def inc_failed_phase_define_attempts(self):
+    def _inc_failed_phase_define_attempts(self):
         self._failed_phase_define_attempts += 1
 
     def check_failed_state_detection_attempts_amount(self):
         if self._failed_phase_define_attempts > self.failed_attempts_amount_threshold:
             self._cur_phase = self._phases[4]
 
-    def process_beginning(self, points):
+    def _process_beginning(self, points):
         """Handle the initial pull up phase.
 
         At this stage we are waiting for the next phase viz. a pulling phase.
@@ -102,7 +102,7 @@ class PhaseQualifier:
         if not arms_are_straight:
             self._cur_phase = self._phases[1]
 
-    def process_chinning(self, points):
+    def _process_chinning(self, points):
         """Handle the chinning pull up phase.
 
         At this stage we are waiting for the next phase viz. a lowering phase.
@@ -112,7 +112,7 @@ class PhaseQualifier:
         if not neck_is_over_wrists_level:
             self._cur_phase = self._phases[3]
 
-    def process_unknown_state(self, points):
+    def _process_unknown_state(self, points):
         """Handle the state that does not fit under any of the states specified by us.
 
         If the state is unknown then we just are waiting for the initial phase of pull up - hanging in the bottom position
@@ -121,10 +121,10 @@ class PhaseQualifier:
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
             self._cur_phase = self._phases[0]
-            self.reset_deviations_calculation()
-            self.calculate_attempt_positions(points)
+            self._reset_deviations_calculation()
+            self._calculate_attempt_positions(points)
 
-    def reset_deviations_calculation(self):
+    def _reset_deviations_calculation(self):
         self._last_shoulder_y_deviations.clear()
         self._last_wrist_y_deviations.clear()
         self._prev_wrists_y = None
@@ -140,7 +140,7 @@ class PhaseQualifier:
         avg_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
         return None if not self.chin_point else self.chin_point[1] - avg_wrists_y
 
-    def calculate_attempt_positions(self, points):
+    def _calculate_attempt_positions(self, points):
         """Calculate the initial and final positions of a pulling up attempt.
 
         To count unclean reps we have to define the position from which we start to count unclean repetition
@@ -192,23 +192,23 @@ class PhaseQualifier:
 
         return self._angle_between_legs <= self.leg_angle_threshold
 
-    def inc_clean_repeats_amount(self):
+    def _inc_clean_repeats_amount(self):
         self._clean_repeats += 1
-        self.reset_attempt()
+        self._reset_attempt()
 
-    def inc_unclean_repeats_amount(self):
+    def _inc_unclean_repeats_amount(self):
         self._unclean_repeats += 1
-        self.reset_attempt()
+        self._reset_attempt()
 
-    def reset_attempt(self):
+    def _reset_attempt(self):
         self._pull_up_attempt_flag = False
 
-    def shoulders_deviation_are_greater_than_wrists_one(self):
+    def are_shoulders_deviation_greater_than_wrists_one(self):
         wrists_deviations_sum = sum(self._last_wrist_y_deviations)
         shoulders_deviations_sum = sum(self._last_shoulder_y_deviations)
         return shoulders_deviations_sum > wrists_deviations_sum
 
-    def process_pulling(self, points):
+    def _process_pulling(self, points):
         """Handle the pulling phase.
 
         From this phase we can pass to the next chinning phase or back to the previous initial position.
@@ -225,22 +225,22 @@ class PhaseQualifier:
         Note: we don't compare the chin position with the bar since we only operate with
         athlete's body key points, so it will be a bit inaccurate.
         """
-        self.update_wrists_y_deviations(points)
-        self.update_shoulders_y_deviations(points)
+        self._update_wrists_y_deviations(points)
+        self._update_shoulders_y_deviations(points)
         if self.is_chin_over_wrists_level(points):
-            if self.shoulders_deviation_are_greater_than_wrists_one():
-                self.inc_clean_repeats_amount()
+            if self.are_shoulders_deviation_greater_than_wrists_one():
+                self._inc_clean_repeats_amount()
                 self._cur_phase = self._phases[2]
 
         elif self.is_there_initial_position(points):
             self._cur_phase = self._phases[0]
         else:
-            self.define_unclean_pull_up_state(points)
+            self._define_unclean_pull_up_state(points)
 
-    def reset_pull_up_attempt(self):
+    def _reset_pull_up_attempt(self):
         self._pull_up_attempt_flag = False
 
-    def define_unclean_pull_up_state(self, points):
+    def _define_unclean_pull_up_state(self, points):
         """Define unclean pull up state.
 
         If a current wrists-chin distance is less than our distance-between-chin-and-wrist-to-start-attempt we consider
@@ -256,13 +256,13 @@ class PhaseQualifier:
             self._pull_up_attempt_flag = cur_distance_between_chin_and_wrists <= self._distance_between_chin_and_wrist_to_start_attempt
         else:
             unclean_pull_up_is_done = cur_distance_between_chin_and_wrists > self._distance_between_chin_and_wrist_to_finish_attempt
-            if unclean_pull_up_is_done and self.shoulders_deviation_are_greater_than_wrists_one():
-                self.inc_unclean_repeats_amount()
+            if unclean_pull_up_is_done and self.are_shoulders_deviation_greater_than_wrists_one():
+                self._inc_unclean_repeats_amount()
                 # pass to lowering phase
                 self._cur_phase = self._phases[3]
-                self.reset_pull_up_attempt()
+                self._reset_pull_up_attempt()
 
-    def update_wrists_y_deviations(self, points):
+    def _update_wrists_y_deviations(self, points):
         """Add a current wrists y deviation to a wrists y deviations queue."""
         cur_wrists_y = (points['LWrist'][1] + points['RWrist'][1]) / 2
         if self._prev_wrists_y:
@@ -270,7 +270,7 @@ class PhaseQualifier:
             self._last_wrist_y_deviations.append(cur_wrists_y_deviation)
         self._prev_wrists_y = cur_wrists_y
 
-    def update_shoulders_y_deviations(self, points):
+    def _update_shoulders_y_deviations(self, points):
         """Add a current shoulders y deviation to a shoulders y deviations queue."""
         cur_shoulders_y = (points['LShoulder'][1] + points['RShoulder'][1]) / 2
         if self._prev_shoulders_y:
@@ -278,7 +278,7 @@ class PhaseQualifier:
             self._last_shoulder_y_deviations.append(cur_shoulders_y_deviation)
         self._prev_shoulders_y = cur_shoulders_y
 
-    def process_lowering(self, points):
+    def _process_lowering(self, points):
         """Handle the lowering pull up phase.
 
         In this phase we are waiting for the next phase viz. the initial phase.
@@ -387,11 +387,11 @@ class PhaseQualifier:
     def qualify_state(self, points):
         self.define_chin_point(points)
         if self.is_there_hang(points):
-            self.zero_failed_phase_define_attempts()
+            self._zero_failed_phase_define_attempts()
             self._process_phase[self._cur_phase](points)
             return True
         else:
-            self.inc_failed_phase_define_attempts()
+            self._inc_failed_phase_define_attempts()
             self.check_failed_state_detection_attempts_amount()
             return False
 
