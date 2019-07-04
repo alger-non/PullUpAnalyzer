@@ -99,7 +99,7 @@ class PullUpCounter:
         self.create_video_capture()
         self.create_video_writer()
         self.create_video_processor()
-        pull_up_counter.create_audio_writer()
+        self.create_audio_writer()
 
         if self.use_raw_data:
             self.exec_with_raw_data()
@@ -184,4 +184,5 @@ t = time.time()
 pull_up_counter.start()
 pull_up_counter.add_audio_events()
 pull_up_counter.add_audio()
+del pull_up_counter.audio_writer
 print(f'Execution time: {time.time() - t:.3} sec')

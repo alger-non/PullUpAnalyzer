@@ -40,5 +40,4 @@ class AudioProcessor:
     def close_resources(self):
         self.clean_rep_event_audio.close()
         self.unclean_rep_event_audio.close()
-        self._audio.reader.close()
         self._audio.close()
