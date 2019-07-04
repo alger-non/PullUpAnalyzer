@@ -10,17 +10,16 @@ class AudioProcessor:
         self._output_source_video = output_source_video
         self._output_background_audio = os.path.join(os.path.dirname(output_source_video), 'background.mp3')
         self._audio = None
+        self._video = None
         self._audio_fps = None
         self._get_audio()
         self.clean_rep_event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Complete_event.wav'))
         self.unclean_rep_event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Fail_event.wav'))
 
     def _get_audio(self):
-        video = VideoFileClip(self._input_source_video)
-        self._audio = video.audio
+        self._video = VideoFileClip(self._input_source_video)
+        self._audio = self._video.audio
         self._audio_fps = self._audio.fps
-        video.reader.close()
-        video.close()
 
     def add_background_audio(self):
         video = VideoFileClip(self._input_source_processed_video)
@@ -42,4 +41,6 @@ class AudioProcessor:
     def close_resources(self):
         self.clean_rep_event_audio.close()
         self.unclean_rep_event_audio.close()
+        self._video.reader.close()
         self._audio.close()
+        self._video.close()
