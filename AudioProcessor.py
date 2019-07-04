@@ -11,12 +11,13 @@ class AudioProcessor:
         self._output_background_audio = os.path.join(os.path.dirname(output_source_video), 'background.mp3')
         self._audio = None
         self._audio_fps = None
-        self.get_audio()
+        self._get_audio()
         self.clean_rep_event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Complete_event.wav'))
         self.unclean_rep_event_audio = AudioFileClip(os.path.join(AudioProcessor.sounds_dir, 'Fail_event.wav'))
 
-    def get_audio(self):
-        self._audio = VideoFileClip(self._input_source_video).audio
+    def _get_audio(self):
+        video = VideoFileClip(self._input_source_video)
+        self._audio = video.audio
         self._audio_fps = self._audio.fps
 
     def add_background_audio(self):
@@ -25,9 +26,19 @@ class AudioProcessor:
         video = video.set_audio(self._audio)
         video.write_videofile(self._output_source_video, audio=True, codec='libx264')
 
+        self.close_resources()
+        video.reader.close()
+        video.close()
+
     def add_event(self, event_type, event_time):
         if event_type == "Complete":
             event_audio = self.clean_rep_event_audio
         else:
             event_audio = self.unclean_rep_event_audio
         self._audio = CompositeAudioClip([self._audio, event_audio.set_start(event_time)])
+
+    def close_resources(self):
+        self.clean_rep_event_audio.close()
+        self.unclean_rep_event_audio.close()
+        self._audio.reader.close()
+        self._audio.close()
