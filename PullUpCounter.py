@@ -53,7 +53,6 @@ class PullUpCounter:
         if not os.path.isfile(self.input_file):
             raise FileNotFoundError("Input file not found.")
         self.short_input_filename = os.path.basename(self.input_file)
-        print(self.short_input_filename)
         if self.use_raw_data:
             self.json_dir = self.find_json_dir_by_video_name(self.input_file)
             if not self.json_dir:

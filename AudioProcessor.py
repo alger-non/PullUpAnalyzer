@@ -19,6 +19,8 @@ class AudioProcessor:
         video = VideoFileClip(self._input_source_video)
         self._audio = video.audio
         self._audio_fps = self._audio.fps
+        video.reader.close()
+        video.close()
 
     def add_background_audio(self):
         video = VideoFileClip(self._input_source_processed_video)
