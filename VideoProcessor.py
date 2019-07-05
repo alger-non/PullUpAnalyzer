@@ -30,7 +30,6 @@ class VideoProcessor:
         cap_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = self.cap.get(cv2.CAP_PROP_FPS)
 
-        print(self.output_file_name_with_sound)
         output_file_name, output_file_extension = self.output_file_name_with_sound.split('.')
         self.output_file_name_without_sound = f'{output_file_name}_without_audio.{output_file_extension}'
         self.video_writer = cv2.VideoWriter(self.output_file_name_without_sound, cv2.VideoWriter_fourcc(*"XVID"), fps,
