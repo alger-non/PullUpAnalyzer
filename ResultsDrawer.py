@@ -88,14 +88,14 @@ class ResultsDrawer:
 
     def print_elapsed_time(self, frame, phase_qualifier, x, y):
         self.timer.inc()
-        if self.old_reps == 0 and phase_qualifier.cur_state == phase_qualifier.phases[0]:
+        if self.old_reps == 0 and phase_qualifier.cur_state == 'beginning':
             self.timer.reset()
 
         cur_time = self.timer.get_time()
         # save time in moment pull-up execution
-        if phase_qualifier.cur_state in phase_qualifier.phases[2]:
+        if phase_qualifier.cur_state == 'chinning':
             self.timer.store_time()
-        if phase_qualifier.cur_state in phase_qualifier.phases[4]:
+        if phase_qualifier.cur_state == 'unknown':
             cur_time = self.timer.get_stored_time()
         mins, secs = int(cur_time / 60), int(cur_time % 60)
         Drawer.print_message(frame, f'{ResultsDrawer.TIME_LABEL}{mins}:{secs:02}', x, y, thickness=ResultsDrawer.TIME_FONT_THICKNESS,

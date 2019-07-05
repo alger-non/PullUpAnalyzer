@@ -16,17 +16,17 @@ class PhaseQualifier:
         self.arm_angle_threshold = arm_angle_threshold
         self.leg_angle_threshold = leg_angle_threshold
         self.wrists_level_angle_threshold = wrists_level_angle_threshold
-        self._phases = ('beginning', 'pulling', 'chinning', 'lowering', 'unknown')
+        self._phases = {'beginning': 0, 'pulling': 1, 'chinning': 2, 'lowering': 3, 'unknown': 4}
         self._cur_phase = 'unknown'
         self._clean_repeats = 0
         self._unclean_repeats = 0
         self._failed_phase_define_attempts = 0
         self.failed_attempts_amount_threshold = failed_attempts_amount_threshold
-        self._process_phase = {self._phases[0]: self._process_beginning,
-                               self._phases[1]: self._process_pulling,
-                               self._phases[2]: self._process_chinning,
-                               self._phases[3]: self._process_lowering,
-                               self._phases[4]: self._process_unknown_state}
+        self._process_phase = {'beginning': self._process_beginning,
+                               'pulling': self._process_pulling,
+                               'chinning': self._process_chinning,
+                               'lowering': self._process_lowering,
+                               'unknown': self._process_unknown_state}
         self._chin_point = []
         self.neck_chin_nose_ratio = neck_chin_top_of_head_ratio
         self._distance_between_chin_and_wrist_to_start_attempt = None
@@ -40,6 +40,10 @@ class PhaseQualifier:
         self._prev_shoulders_y = None
         self._prev_wrists_y = None
         self._angle_between_legs = None
+
+    def _set_cur_phase_as(self, phase: str):
+        assert phase in self._phases
+        self._cur_phase = phase
 
     def get_wrists_level_angle(self):
         return self._cur_wrists_level_angle
@@ -90,7 +94,7 @@ class PhaseQualifier:
 
     def check_failed_state_detection_attempts_amount(self):
         if self._failed_phase_define_attempts > self.failed_attempts_amount_threshold:
-            self._cur_phase = self._phases[4]
+            self._set_cur_phase_as('unknown')
 
     def _process_beginning(self, points):
         """Handle the initial pull up phase.
@@ -100,7 +104,7 @@ class PhaseQualifier:
         """
         arms_are_straight = self.are_arms_straight(points)
         if not arms_are_straight:
-            self._cur_phase = self._phases[1]
+            self._set_cur_phase_as('pulling')
 
     def _process_chinning(self, points):
         """Handle the chinning pull up phase.
@@ -110,7 +114,7 @@ class PhaseQualifier:
         """
         neck_is_over_wrists_level = self.is_chin_over_wrists_level(points)
         if not neck_is_over_wrists_level:
-            self._cur_phase = self._phases[3]
+            self._set_cur_phase_as('lowering')
 
     def _process_unknown_state(self, points):
         """Handle the state that does not fit under any of the states specified by us.
@@ -120,7 +124,7 @@ class PhaseQualifier:
         """
         there_is_initial_position = self.is_there_initial_position(points)
         if there_is_initial_position:
-            self._cur_phase = self._phases[0]
+            self._set_cur_phase_as('beginning')
             self._reset_deviations_calculation()
             self._calculate_attempt_positions(points)
 
@@ -230,10 +234,10 @@ class PhaseQualifier:
         if self.is_chin_over_wrists_level(points):
             if self.are_shoulders_deviation_greater_than_wrists_one():
                 self._inc_clean_repeats_amount()
-                self._cur_phase = self._phases[2]
+                self._set_cur_phase_as('chinning')
 
         elif self.is_there_initial_position(points):
-            self._cur_phase = self._phases[0]
+            self._set_cur_phase_as('beginning')
         else:
             self._define_unclean_pull_up_state(points)
 
@@ -259,7 +263,7 @@ class PhaseQualifier:
             if unclean_pull_up_is_done and self.are_shoulders_deviation_greater_than_wrists_one():
                 self._inc_unclean_repeats_amount()
                 # pass to lowering phase
-                self._cur_phase = self._phases[3]
+                self._set_cur_phase_as('lowering')
                 self._reset_pull_up_attempt()
 
     def _update_wrists_y_deviations(self, points):
@@ -284,7 +288,7 @@ class PhaseQualifier:
         In this phase we are waiting for the next phase viz. the initial phase.
         """
         if self.is_there_initial_position(points):
-            self._cur_phase = self._phases[0]
+            self._set_cur_phase_as('beginning')
 
     def is_there_hang(self, points):
         """Define whether there is hanging on the bar.
